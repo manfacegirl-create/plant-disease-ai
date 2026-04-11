@@ -7,9 +7,6 @@ from PIL import Image
 import numpy as np
 import plotly.express as px
 
-# NOTE: Gemini removed visually (to make it look non-AI heavy)
-import google.generativeai as genai
-
 # ================= PAGE CONFIG =================
 st.set_page_config(
     page_title="Plant Health Analyzer",
@@ -17,19 +14,14 @@ st.set_page_config(
     layout="wide"
 )
 
-# ================= BLACK & WHITE PROFESSIONAL THEME =================
+# ================= CLEAN WHITE THEME =================
 st.markdown("""
 <style>
 
-/* MAIN BACKGROUND (BLACK & WHITE CLEAN) */
+/* MAIN BACKGROUND */
 [data-testid="stAppViewContainer"] {
     background-color: #ffffff;
-    color: #000000;
-}
-
-/* SIDEBAR */
-[data-testid="stSidebar"] {
-    background-color: #f2f2f2;
+    color: #111111;
 }
 
 /* HEADER */
@@ -37,39 +29,57 @@ st.markdown("""
     background-color: #ffffff;
 }
 
+/* SIDEBAR */
+[data-testid="stSidebar"] {
+    background-color: #f5f5f5;
+}
+
 /* GLOBAL TEXT */
 html, body, [class*="css"] {
-    color: #000000;
-    font-family: "Arial", sans-serif;
+    color: #111111 !important;
+    font-family: Arial;
 }
 
-/* REMOVE AI LOOK */
-h1, h2, h3 {
-    color: #000000;
-    font-weight: 600;
+/* HEADINGS */
+h1, h2, h3, h4 {
+    color: #111111 !important;
 }
 
-/* IMAGE / RESULT CARDS */
+/* FILE UPLOADER */
+[data-testid="stFileUploader"] {
+    background-color: #ffffff;
+    border: 1px solid #dddddd;
+    border-radius: 10px;
+    padding: 10px;
+}
+
+/* CARD STYLE */
 .card {
     background-color: #ffffff;
     border: 1px solid #e0e0e0;
-    border-radius: 10px;
+    border-radius: 12px;
     padding: 15px;
     margin-bottom: 15px;
+    color: #111111;
 }
 
-/* BUTTON STYLE (MONOCHROME) */
+/* BUTTONS */
 .stButton>button {
-    background-color: #000000;
+    background-color: #111111;
     color: #ffffff;
-    border-radius: 6px;
+    border-radius: 8px;
     padding: 8px 16px;
     border: none;
 }
 
 /* PROGRESS BAR */
 .stProgress > div > div > div > div {
-    background-color: #000000;
+    background-color: #111111;
+}
+
+/* PLOTLY FIX */
+.js-plotly-plot {
+    background-color: #ffffff !important;
 }
 
 </style>
@@ -77,7 +87,7 @@ h1, h2, h3 {
 
 # ================= TITLE =================
 st.title("Plant Health Analyzer")
-st.caption("Leaf Image Classification System")
+st.caption("Leaf Classification System (CNN Model)")
 
 # ================= CLASSES =================
 classes = ["Diseased", "Healthy"]
@@ -119,7 +129,7 @@ model = load_model()
 
 # ================= UPLOAD =================
 uploaded_file = st.file_uploader(
-    "Upload Image",
+    "Upload Leaf Image",
     type=["jpg", "png", "jpeg"]
 )
 
@@ -130,7 +140,7 @@ if uploaded_file:
 
     col1, col2 = st.columns(2)
 
-    # IMAGE
+    # IMAGE CARD
     with col1:
         st.markdown('<div class="card">', unsafe_allow_html=True)
         st.subheader("Input Image")
@@ -139,8 +149,8 @@ if uploaded_file:
 
     img_tensor = transform(image).unsqueeze(0)
 
-    # PREDICT
-    with st.spinner("Processing image..."):
+    # PREDICTION
+    with st.spinner("Analyzing image..."):
         with torch.no_grad():
             output = model(img_tensor)
             probs = torch.softmax(output, dim=1)[0].numpy()
@@ -148,10 +158,10 @@ if uploaded_file:
         pred_class = int(np.argmax(probs))
         confidence = float(probs[pred_class]) * 100
 
-    # RESULT
+    # RESULT CARD
     with col2:
         st.markdown('<div class="card">', unsafe_allow_html=True)
-        st.subheader("Result")
+        st.subheader("Prediction Result")
 
         if pred_class == 0:
             st.error(f"Diseased ({confidence:.2f}%)")
@@ -163,15 +173,21 @@ if uploaded_file:
         fig = px.bar(
             x=classes,
             y=probs * 100,
-            labels={"x": "Class", "y": "Confidence"}
+            labels={"x": "Class", "y": "Confidence (%)"}
         )
+
+        fig.update_layout(
+            paper_bgcolor="white",
+            plot_bgcolor="white",
+            font_color="black"
+        )
+
         st.plotly_chart(fig, use_container_width=True)
 
-        # SIMPLE STATUS (NO AI STYLE)
         status = "LOW RISK" if pred_class == 1 else "HIGH RISK"
         st.info(f"Status: {status}")
 
         st.markdown('</div>', unsafe_allow_html=True)
 
 else:
-    st.info("Upload a plant leaf image to analyze.")
+    st.info("Upload a leaf image to start analysis.")
