@@ -7,11 +7,17 @@ from PIL import Image
 import numpy as np
 import plotly.express as px
 import pandas as pd
-import google.generativeai as genai
+
+# Try Gemini import safely
+try:
+    import google.generativeai as genai
+    GEMINI_AVAILABLE = True
+except:
+    GEMINI_AVAILABLE = False
 
 # ================= PAGE CONFIG =================
 st.set_page_config(
-    page_title="LeafSentry AI Pro",
+    page_title="LeafSentry AI",
     page_icon="🌿",
     layout="wide"
 )
@@ -51,7 +57,7 @@ transform = transforms.Compose([
                          [0.229, 0.224, 0.225])
 ])
 
-# ================= CNN MODEL (MATCH TRAINING) =================
+# ================= CNN MODEL =================
 class CNN(nn.Module):
     def __init__(self):
         super().__init__()
@@ -79,63 +85,53 @@ class CNN(nn.Module):
 # ================= LOAD MODEL =================
 @st.cache_resource
 def load_model():
-    model = CNN()
-
     try:
+        model = CNN()
         state = torch.load("cnn.pth", map_location="cpu")
         model.load_state_dict(state)
         model.eval()
         return model
-
     except Exception as e:
-        st.sidebar.error("❌ Model Load Failed")
+        st.sidebar.error("❌ Model load failed")
         st.sidebar.warning(str(e))
         return None
 
 model = load_model()
 
-# ================= GEMINI AUTO FIX =================
+# ================= GEMINI SAFE INIT =================
 GEMINI_OK = False
-model_ai = None
+gemini_model = None
 GEMINI_ERROR = None
 
 def init_gemini():
-    global GEMINI_OK, model_ai, GEMINI_ERROR
+    global GEMINI_OK, gemini_model, GEMINI_ERROR
+
+    if not GEMINI_AVAILABLE:
+        GEMINI_ERROR = "Gemini library not installed"
+        return
 
     try:
         api_key = st.secrets.get("GEMINI_API_KEY", None)
 
         if not api_key:
-            GEMINI_ERROR = "Missing GEMINI_API_KEY"
+            GEMINI_ERROR = "Missing API key in secrets.toml"
             return
 
         genai.configure(api_key=api_key)
 
-        # 🔥 AUTO MODEL FALLBACK (FIX 404 FOREVER)
-        models_to_try = [
-            "gemini-1.5-flash",
-            "gemini-1.5-pro"
-        ]
+        # ONLY SAFE MODEL (NO 404 RISK)
+        gemini_model = genai.GenerativeModel("gemini-pro")
 
-        for m in models_to_try:
-            try:
-                temp = genai.GenerativeModel(m)
-                test = temp.generate_content("OK")
+        # test call (safe)
+        test = gemini_model.generate_content("Hi")
 
-                if test and hasattr(test, "text"):
-                    model_ai = temp
-                    GEMINI_OK = True
-                    GEMINI_ERROR = None
-                    return
-
-            except Exception as e:
-                GEMINI_ERROR = f"{m} failed: {str(e)}"
-
-        GEMINI_OK = False
+        if test and hasattr(test, "text"):
+            GEMINI_OK = True
+        else:
+            GEMINI_ERROR = "Gemini test failed"
 
     except Exception as e:
         GEMINI_ERROR = str(e)
-        GEMINI_OK = False
 
 init_gemini()
 
@@ -152,18 +148,19 @@ Prediction: {classes[pred]}
 Confidence: {conf:.2f}%
 
 Advice:
-- Monitor plant regularly
-- Ensure proper watering
-- Apply treatment if diseased
+- Monitor plant health
+- Check leaves regularly
+- Adjust watering
 """
 
-# ================= GEMINI =================
+# ================= AI RESPONSE =================
 def gemini_advice(pred, conf):
     if not GEMINI_OK:
         return f"""
 ❌ GEMINI OFFLINE
 
-Reason: {GEMINI_ERROR}
+Reason:
+{GEMINI_ERROR}
 
 --- Offline Mode ---
 {offline_ai(pred, conf)}
@@ -171,9 +168,9 @@ Reason: {GEMINI_ERROR}
 
     try:
         prompt = f"""
-You are an expert agricultural AI.
+You are an expert plant disease AI.
 
-Plant: {classes[pred]}
+Plant status: {classes[pred]}
 Confidence: {conf:.2f}%
 
 Give:
@@ -183,11 +180,11 @@ Give:
 - Prevention
 """
 
-        res = model_ai.generate_content(prompt)
-        return res.text if res else "Empty response"
+        res = gemini_model.generate_content(prompt)
+        return res.text
 
     except Exception as e:
-        return f"Gemini runtime error: {str(e)}"
+        return f"Gemini error: {str(e)}"
 
 # ================= UPLOAD =================
 uploaded_file = st.file_uploader("Upload Leaf Image", type=["jpg", "png", "jpeg"])
@@ -231,10 +228,7 @@ if uploaded_file:
 
         st.progress(int(conf))
 
-        fig = px.bar(
-            x=classes,
-            y=probs * 100
-        )
+        fig = px.bar(x=classes, y=probs * 100)
         st.plotly_chart(fig, use_container_width=True)
 
     # ================= AI =================
@@ -264,4 +258,4 @@ else:
     st.sidebar.error("Gemini OFFLINE ❌")
     st.sidebar.warning(GEMINI_ERROR)
 
-st.sidebar.info("System: Bulletproof AI Mode")
+st.sidebar.info("Stable Production Version")
