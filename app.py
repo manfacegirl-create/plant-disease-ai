@@ -1,3 +1,4 @@
+# ================= IMPORTS =================
 import streamlit as st
 import torch
 import torch.nn as nn
@@ -15,19 +16,26 @@ st.set_page_config(
 )
 
 # ================= GEMINI SETUP =================
-genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
-model_ai = genai.GenerativeModel("gemini-1.5-flash")
+try:
+    genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
+    model_ai = genai.GenerativeModel("gemini-1.5-flash")
+    GEMINI_OK = True
+except:
+    GEMINI_OK = False
 
 # ================= SIDEBAR =================
 st.sidebar.title("🌿 Plant AI System")
-st.sidebar.info("CNN Model Only (Stable Version)")
+st.sidebar.info("CNN Model (Fixed Version)")
 
-classes = ["🌱 Healthy", "🍂 Diseased"]
+# ⚠️ FIXED CLASS ORDER (MATCH TRAINING)
+classes = ["🍂 Diseased", "🌱 Healthy"]
 
-# ================= TRANSFORM =================
+# ================= TRANSFORM (FIXED) =================
 transform = transforms.Compose([
     transforms.Resize((224, 224)),
     transforms.ToTensor(),
+    transforms.Normalize([0.485, 0.456, 0.406],
+                         [0.229, 0.224, 0.225])
 ])
 
 # ================= CNN MODEL =================
@@ -47,7 +55,7 @@ class CNN(nn.Module):
         x = x.view(x.size(0), -1)
         return self.fc(x)
 
-# ================= LOAD CNN MODEL =================
+# ================= LOAD MODEL =================
 @st.cache_resource
 def load_model():
     model = CNN()
@@ -57,8 +65,11 @@ def load_model():
 
 model = load_model()
 
-# ================= GEMINI =================
+# ================= GEMINI FUNCTION =================
 def gemini_interpretation(pred_class, confidence):
+    if not GEMINI_OK:
+        return "⚠️ Gemini API not configured."
+
     prompt = f"""
 You are an agricultural AI expert.
 
@@ -71,12 +82,16 @@ Give:
 2. Possible cause
 3. Advice for farmers
 """
-    response = model_ai.generate_content(prompt)
-    return response.text
+
+    try:
+        response = model_ai.generate_content(prompt)
+        return response.text
+    except Exception as e:
+        return f"⚠️ Gemini failed: {str(e)}"
 
 # ================= TITLE =================
 st.title("🌿 Plant Disease Detection AI")
-st.caption("CNN Model + Gemini AI (Stable Deployment Version)")
+st.caption("Fixed CNN Model + Gemini AI")
 
 # ================= UPLOAD =================
 uploaded_file = st.file_uploader(
@@ -108,13 +123,15 @@ if uploaded_file:
     with col2:
         st.subheader("📊 Prediction Result")
 
-        if pred_class == 1:
+        # ✅ FIXED LOGIC
+        if pred_class == 0:
             st.error(f"🍂 Diseased ({confidence:.2f}%)")
         else:
             st.success(f"🌱 Healthy ({confidence:.2f}%)")
 
         st.progress(int(confidence))
 
+        # Chart
         fig = px.bar(
             x=classes,
             y=probs * 100,
@@ -122,16 +139,12 @@ if uploaded_file:
         )
         st.plotly_chart(fig, use_container_width=True)
 
+        # 🔍 DEBUG (VERY IMPORTANT)
+        st.write("Raw probabilities:", probs)
+
     # ================= GEMINI =================
     st.divider()
-    st.subheader("🧠 Gemini AI Advice")
+    st.subheader("🧠 AI Advice")
 
-    try:
-        with st.spinner("Gemini thinking..."):
-            explanation = gemini_interpretation(pred_class, confidence)
-
-        st.write(explanation)
-
-    except Exception as e:
-        st.error("Gemini failed.")
-        st.code(str(e))
+    explanation = gemini_interpretation(pred_class, confidence)
+    st.write(explanation)
