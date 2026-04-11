@@ -66,7 +66,7 @@ class ResNetModel(nn.Module):
     def forward(self, x):
         return self.model(x)
 
-# ================= DOWNLOAD RESNET FROM GOOGLE DRIVE =================
+# ================= DOWNLOAD RESNET =================
 def download_resnet():
     url = "https://drive.google.com/uc?export=download&id=1D53PoSyh3aze-EobeTpHcBJobB38xyAS"
     path = "resnet.pth"
@@ -79,18 +79,26 @@ def download_resnet():
 
     return path
 
-# ================= LOAD MODELS =================
+# ================= LOAD MODELS (FIXED) =================
 @st.cache_resource
 def load_models():
-    # CNN (local)
+
+    # ===== CNN =====
     cnn = CNN()
-    cnn.load_state_dict(torch.load("cnn.pth", map_location="cpu"))
+    cnn_path = "cnn.pth"
+
+    if not os.path.exists(cnn_path):
+        st.error("❌ cnn.pth not found in project directory")
+        st.stop()
+
+    cnn.load_state_dict(torch.load(cnn_path, map_location="cpu"))
     cnn.eval()
 
-    # ResNet (download if needed)
+    # ===== RESNET =====
     resnet = ResNetModel()
     resnet_path = download_resnet()
-    resnet_state = torch.load(resnet_path, map_location="cpu", weights_only=False)
+
+    resnet_state = torch.load(resnet_path, map_location="cpu")
     resnet.load_state_dict(resnet_state)
     resnet.eval()
 
@@ -105,12 +113,13 @@ def get_model(choice):
     elif choice == "ResNet50":
         return resnet_model
     else:
-        return cnn_model  # Auto default (you can improve later)
+        return cnn_model
 
 model = get_model(model_choice)
 
 # ================= GEMINI FUNCTION =================
 def gemini_interpretation(pred_class, confidence):
+
     prompt = f"""
 You are an agricultural AI expert.
 
@@ -123,6 +132,7 @@ Give:
 2. Possible cause
 3. Advice for farmers
 """
+
     response = model_ai.generate_content(prompt)
     return response.text
 
@@ -151,7 +161,7 @@ if uploaded_file:
     with st.spinner("🧠 AI analyzing..."):
         with torch.no_grad():
             output = model(img_tensor)
-            probs = torch.softmax(output, dim=1)[0].numpy()
+            probs = torch.softmax(output, dim=1)[0].cpu().numpy()
 
         pred_class = int(np.argmax(probs))
         confidence = float(probs[pred_class]) * 100
