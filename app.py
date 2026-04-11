@@ -10,7 +10,7 @@ import google.generativeai as genai
 
 # ================= PAGE CONFIG =================
 st.set_page_config(
-    page_title="LeftSentry AI",
+    page_title="LeafSentry AI",
     page_icon="🌿",
     layout="wide"
 )
