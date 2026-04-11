@@ -18,7 +18,7 @@ st.set_page_config(
 genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
 
 # ✅ FIX: create model ONCE (not inside function)
-model_ai = genai.GenerativeModel("gemini-1.5-flash")
+model_ai = genai.GenerativeModel("gemini-1.5-pro")
 
 # ================= SIDEBAR =================
 st.sidebar.title("🌿 Plant AI System")
