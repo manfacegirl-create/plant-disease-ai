@@ -7,3 +7,6 @@ pillow
 matplotlib
 numpy
 plotly
+google-generativeai
+
+
