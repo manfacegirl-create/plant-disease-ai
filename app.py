@@ -1,7 +1,7 @@
 import os
 
 # ================= FORCE INSTALL PYTORCH (STREAMLIT CLOUD FIX) =================
-os.system("pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu")
+
 
 # ================= IMPORTS =================
 import streamlit as st
