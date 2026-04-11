@@ -11,7 +11,7 @@ import google.generativeai as genai
 
 # ================= PAGE CONFIG =================
 st.set_page_config(
-    page_title="LeafSentry AI",
+    page_title="LeafSentry AI Pro",
     page_icon="🌿",
     layout="wide"
 )
@@ -40,7 +40,61 @@ h1, h2, h3 {
 </style>
 """, unsafe_allow_html=True)
 
-# ================= GEMINI FIXED =================
+# ================= CLASSES =================
+classes = ["Diseased", "Healthy"]
+
+# ================= TRANSFORM =================
+transform = transforms.Compose([
+    transforms.Resize((224, 224)),
+    transforms.ToTensor(),
+    transforms.Normalize([0.485, 0.456, 0.406],
+                         [0.229, 0.224, 0.225])
+])
+
+# ================= CNN MODEL (MATCH TRAINING) =================
+class CNN(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.net = nn.Sequential(
+            nn.Conv2d(3, 32, 3, padding=1),
+            nn.ReLU(),
+            nn.MaxPool2d(2),
+
+            nn.Conv2d(32, 64, 3, padding=1),
+            nn.ReLU(),
+            nn.MaxPool2d(2),
+
+            nn.Conv2d(64, 128, 3, padding=1),
+            nn.ReLU(),
+
+            nn.AdaptiveAvgPool2d(1)
+        )
+        self.fc = nn.Linear(128, 2)
+
+    def forward(self, x):
+        x = self.net(x)
+        x = x.view(x.size(0), -1)
+        return self.fc(x)
+
+# ================= LOAD MODEL =================
+@st.cache_resource
+def load_model():
+    model = CNN()
+
+    try:
+        state = torch.load("cnn.pth", map_location="cpu")
+        model.load_state_dict(state)
+        model.eval()
+        return model
+
+    except Exception as e:
+        st.sidebar.error("❌ Model Load Failed")
+        st.sidebar.warning(str(e))
+        return None
+
+model = load_model()
+
+# ================= GEMINI AUTO FIX =================
 GEMINI_OK = False
 model_ai = None
 GEMINI_ERROR = None
@@ -57,16 +111,27 @@ def init_gemini():
 
         genai.configure(api_key=api_key)
 
-        # ✅ FIXED MODEL NAME
-        model_ai = genai.GenerativeModel("gemini-1.5-flash-latest")
+        # 🔥 AUTO MODEL FALLBACK (FIX 404 FOREVER)
+        models_to_try = [
+            "gemini-1.5-flash",
+            "gemini-1.5-pro"
+        ]
 
-        # test call
-        test = model_ai.generate_content("OK")
-        if not test:
-            GEMINI_ERROR = "Gemini test failed"
-            return
+        for m in models_to_try:
+            try:
+                temp = genai.GenerativeModel(m)
+                test = temp.generate_content("OK")
 
-        GEMINI_OK = True
+                if test and hasattr(test, "text"):
+                    model_ai = temp
+                    GEMINI_OK = True
+                    GEMINI_ERROR = None
+                    return
+
+            except Exception as e:
+                GEMINI_ERROR = f"{m} failed: {str(e)}"
+
+        GEMINI_OK = False
 
     except Exception as e:
         GEMINI_ERROR = str(e)
@@ -74,73 +139,11 @@ def init_gemini():
 
 init_gemini()
 
-# ================= TITLE =================
-st.title("🌿 LeafSentry AI Pro (Fully Fixed)")
-st.caption("Stable CNN + Working Gemini Integration")
-
-# ================= CLASSES =================
-classes = ["Diseased", "Healthy"]
-
-# ================= TRANSFORM =================
-transform = transforms.Compose([
-    transforms.Resize((224, 224)),
-    transforms.ToTensor(),
-    transforms.Normalize([0.485, 0.456, 0.406],
-                         [0.229, 0.224, 0.225])
-])
-
-# ================= MODEL (MATCH TRAINING) =================
-class CNN(nn.Module):
-    def __init__(self):
-        super().__init__()
-
-        # 🔥 MUST MATCH YOUR TRAINED MODEL (net)
-        self.net = nn.Sequential(
-            nn.Conv2d(3, 32, 3, padding=1),
-            nn.ReLU(),
-            nn.MaxPool2d(2),
-
-            nn.Conv2d(32, 64, 3, padding=1),
-            nn.ReLU(),
-            nn.MaxPool2d(2),
-
-            nn.Conv2d(64, 128, 3, padding=1),
-            nn.ReLU(),
-
-            nn.AdaptiveAvgPool2d(1)
-        )
-
-        self.fc = nn.Linear(128, 2)
-
-    def forward(self, x):
-        x = self.net(x)
-        x = x.view(x.size(0), -1)
-        return self.fc(x)
-
-# ================= LOAD MODEL (SAFE) =================
-@st.cache_resource
-def load_model():
-    model = CNN()
-
-    try:
-        state = torch.load("cnn.pth", map_location="cpu")
-        model.load_state_dict(state)   # STRICT MATCH
-
-        model.eval()
-        return model
-
-    except Exception as e:
-        st.sidebar.error("❌ Model load failed")
-        st.sidebar.warning(str(e))
-        return None
-
-model = load_model()
-
-# ================= HISTORY =================
+# ================= SESSION =================
 if "history" not in st.session_state:
     st.session_state.history = []
 
-# ================= AI FALLBACK =================
+# ================= OFFLINE AI =================
 def offline_ai(pred, conf):
     return f"""
 🔍 Offline AI Report
@@ -149,18 +152,27 @@ Prediction: {classes[pred]}
 Confidence: {conf:.2f}%
 
 Advice:
-- Monitor plant health
-- Maintain irrigation
+- Monitor plant regularly
+- Ensure proper watering
 - Apply treatment if diseased
 """
 
 # ================= GEMINI =================
 def gemini_advice(pred, conf):
     if not GEMINI_OK:
-        return f"❌ Gemini Offline\n\n{GEMINI_ERROR}\n\n{offline_ai(pred, conf)}"
+        return f"""
+❌ GEMINI OFFLINE
+
+Reason: {GEMINI_ERROR}
+
+--- Offline Mode ---
+{offline_ai(pred, conf)}
+"""
 
     try:
         prompt = f"""
+You are an expert agricultural AI.
+
 Plant: {classes[pred]}
 Confidence: {conf:.2f}%
 
@@ -171,11 +183,11 @@ Give:
 - Prevention
 """
 
-        response = model_ai.generate_content(prompt)
-        return response.text
+        res = model_ai.generate_content(prompt)
+        return res.text if res else "Empty response"
 
     except Exception as e:
-        return f"❌ Gemini error: {str(e)}"
+        return f"Gemini runtime error: {str(e)}"
 
 # ================= UPLOAD =================
 uploaded_file = st.file_uploader("Upload Leaf Image", type=["jpg", "png", "jpeg"])
@@ -210,7 +222,7 @@ if uploaded_file:
 
     # ================= RESULT =================
     with col2:
-        st.subheader("Prediction")
+        st.subheader("Prediction Result")
 
         if classes[pred] == "Diseased":
             st.error("🚨 Diseased Plant")
@@ -252,4 +264,4 @@ else:
     st.sidebar.error("Gemini OFFLINE ❌")
     st.sidebar.warning(GEMINI_ERROR)
 
-st.sidebar.info("System Stable + Fixed Version")
+st.sidebar.info("System: Bulletproof AI Mode")
