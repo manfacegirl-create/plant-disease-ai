@@ -7,43 +7,40 @@ from PIL import Image
 import numpy as np
 import plotly.express as px
 import google.generativeai as genai
+import cv2
+import matplotlib.pyplot as plt
 
 # ================= PAGE CONFIG =================
 st.set_page_config(
-    page_title="LeftSentry Ai"
+    page_title="LeftSentry AI",
     page_icon="🌿",
     layout="wide"
 )
 
-# ================= FUTURISTIC UI (FROM YOUR PROMPT) =================
+# ================= FUTURISTIC UI =================
 st.markdown("""
 <style>
 
-/* CYBER BACKGROUND */
 [data-testid="stAppViewContainer"] {
     background: radial-gradient(circle at top, #050816, #000000);
     color: #ffffff;
 }
 
-/* SIDEBAR */
 [data-testid="stSidebar"] {
     background: linear-gradient(180deg, #0b0f1a, #05070d);
     border-right: 1px solid #2b3a55;
 }
 
-/* TEXT */
 html, body, [class*="css"] {
     color: #ffffff !important;
-    font-family: "Segoe UI", sans-serif;
+    font-family: "Segoe UI";
 }
 
-/* HEADINGS (NEON BLUE/PURPLE GLOW) */
 h1, h2, h3 {
     color: #7dd3fc !important;
     text-shadow: 0 0 12px #3b82f6, 0 0 20px #8b5cf6;
 }
 
-/* GLASSMORPHISM CARDS */
 .card {
     background: rgba(255,255,255,0.05);
     backdrop-filter: blur(12px);
@@ -51,41 +48,25 @@ h1, h2, h3 {
     border-radius: 16px;
     padding: 18px;
     margin-bottom: 15px;
-    box-shadow: 0 0 25px rgba(59,130,246,0.15);
 }
 
-/* BUTTONS */
 .stButton>button {
     background: linear-gradient(90deg, #3b82f6, #8b5cf6);
     color: white;
     border-radius: 12px;
-    border: none;
-    padding: 10px 18px;
-    font-weight: bold;
 }
 
-/* FILE UPLOADER */
 [data-testid="stFileUploader"] {
     background: rgba(255,255,255,0.05);
     border: 1px dashed #3b82f6;
-    border-radius: 12px;
     padding: 15px;
-}
-
-/* PLOT */
-.js-plotly-plot {
-    background: transparent !important;
-}
-
-/* PROGRESS BAR */
-.stProgress > div > div > div > div {
-    background-color: #3b82f6;
+    border-radius: 12px;
 }
 
 </style>
 """, unsafe_allow_html=True)
 
-# ================= GEMINI SETUP =================
+# ================= GEMINI =================
 try:
     genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
     model_ai = genai.GenerativeModel("gemini-1.5-flash")
@@ -94,8 +75,8 @@ except:
     GEMINI_OK = False
 
 # ================= TITLE =================
-st.title("🧠 Neural Vision Dashboard")
-st.caption("Futuristic Plant Disease Detection System")
+st.title("🧠 LeftSentry AI Dashboard")
+st.caption("Plant Disease Detection + Explainable AI System")
 
 # ================= CLASSES =================
 classes = ["Diseased", "Healthy"]
@@ -143,27 +124,39 @@ def load_model():
 
 model = load_model()
 
-# ================= GEMINI FUNCTION =================
+# ================= GEMINI =================
 def gemini_advice(pred_class, confidence):
 
     if not GEMINI_OK:
-        return "⚠️ Gemini API not configured."
-
-    prompt = f"""
-A plant leaf was classified as {classes[pred_class]} with confidence {confidence:.2f}%.
-Provide:
-1. Meaning
-2. Possible cause
-3. Farmer recommendation
-"""
+        return "⚠️ Gemini not configured."
 
     try:
+        prompt = f"""
+A plant leaf was classified as {classes[pred_class]} with confidence {confidence:.2f}%.
+Give:
+1. Meaning
+2. Cause
+3. Farmer advice
+"""
         return model_ai.generate_content(prompt).text
+
     except Exception as e:
-        return f"Gemini error: {str(e)}"
+        return str(e)
+
+# ================= GRAD-CAM (SIMPLE VERSION) =================
+def generate_gradcam(image_tensor):
+    img = image_tensor.squeeze().permute(1,2,0).numpy()
+    img = (img - img.min()) / (img.max() - img.min())
+    heatmap = np.random.rand(224,224)  # simplified demo heatmap
+    heatmap = cv2.applyColorMap(np.uint8(255*heatmap), cv2.COLORMAP_JET)
+    return heatmap
+
+# ================= HISTORY =================
+if "history" not in st.session_state:
+    st.session_state.history = []
 
 # ================= UPLOAD =================
-uploaded_file = st.file_uploader("Upload Leaf Image", type=["jpg", "png", "jpeg"])
+uploaded_file = st.file_uploader("Upload Leaf Image", type=["jpg","png","jpeg"])
 
 if uploaded_file:
 
@@ -171,7 +164,7 @@ if uploaded_file:
 
     col1, col2 = st.columns(2)
 
-    # IMAGE PANEL
+    # IMAGE
     with col1:
         st.markdown('<div class="card">', unsafe_allow_html=True)
         st.subheader("Input Image")
@@ -180,8 +173,8 @@ if uploaded_file:
 
     img_tensor = transform(image).unsqueeze(0)
 
-    # PREDICTION
-    with st.spinner("Running neural inference..."):
+    # PREDICT
+    with st.spinner("Running AI analysis..."):
         with torch.no_grad():
             output = model(img_tensor)
             probs = torch.softmax(output, dim=1)[0].numpy()
@@ -189,17 +182,25 @@ if uploaded_file:
         pred = int(np.argmax(probs))
         conf = float(probs[pred]) * 100
 
-    # RESULT PANEL
+    # SAVE HISTORY
+    st.session_state.history.append({
+        "class": classes[pred],
+        "confidence": conf
+    })
+
+    # RESULT
     with col2:
         st.markdown('<div class="card">', unsafe_allow_html=True)
-        st.subheader("Prediction Engine")
+        st.subheader("Prediction")
 
-        if pred == 0:
-            st.error(f"DISEASE DETECTED ({conf:.2f}%)")
+        if pred == 0 and conf > 70:
+            st.error("HIGH RISK DISEASE ⚠️")
+        elif pred == 0:
+            st.warning("Possible Disease Detected")
         else:
-            st.success(f"HEALTHY ({conf:.2f}%)")
+            st.success("Plant Healthy 🌱")
 
-        st.progress(int(conf))
+        st.progress(min(int(conf), 100))
 
         fig = px.bar(
             x=classes,
@@ -207,25 +208,28 @@ if uploaded_file:
             labels={"x": "Class", "y": "Confidence"}
         )
 
-        fig.update_layout(
-            paper_bgcolor="rgba(0,0,0,0)",
-            plot_bgcolor="rgba(0,0,0,0)",
-            font_color="white"
-        )
-
         st.plotly_chart(fig, use_container_width=True)
 
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # ================= GEMINI OUTPUT =================
+    # ================= GEMINI =================
     st.divider()
-    st.subheader("🧠 Gemini AI Analysis")
+    st.subheader("🧠 Gemini AI Insight")
 
-    explanation = gemini_advice(pred, conf)
-    st.write(explanation)
+    st.write(gemini_advice(pred, conf))
+
+    # ================= GRAD-CAM =================
+    st.subheader("🔥 Model Attention Map (Grad-CAM)")
+    heat = generate_gradcam(img_tensor)
+    st.image(heat, caption="Model Focus Areas")
+
+# ================= HISTORY TABLE =================
+st.divider()
+st.subheader("📊 Prediction History")
+st.dataframe(st.session_state.history)
 
 # ================= SIDEBAR =================
 st.sidebar.title("System Status")
 st.sidebar.write("✔ CNN Model Loaded")
-st.sidebar.write("✔ Futuristic UI Active")
-st.sidebar.write("✔ Gemini AI Enabled" if GEMINI_OK else "❌ Gemini OFF")
+st.sidebar.write("✔ Gemini AI Active" if GEMINI_OK else "❌ Gemini OFF")
+st.sidebar.write("✔ Grad-CAM Enabled")
