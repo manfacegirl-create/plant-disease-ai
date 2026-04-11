@@ -7,16 +7,18 @@ import numpy as np
 import plotly.express as px
 import google.generativeai as genai
 
-# ================= GEMINI SETUP =================
-# 🔐 PUT YOUR KEY HERE (DO NOT SHARE IT PUBLICLY)
-genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
-
 # ================= PAGE CONFIG =================
 st.set_page_config(
     page_title="Plant Disease AI",
     page_icon="🌿",
     layout="wide"
 )
+
+# ================= GEMINI SETUP =================
+genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
+
+# ✅ FIX: create model ONCE (not inside function)
+model_ai = genai.GenerativeModel("gemini-1.5-flash")
 
 # ================= SIDEBAR =================
 st.sidebar.title("🌿 Plant AI System")
@@ -63,8 +65,6 @@ classes = ["🌱 Healthy", "🍂 Diseased"]
 
 # ================= GEMINI FUNCTION =================
 def gemini_interpretation(pred_class, confidence):
-    model_ai = genai.GenerativeModel("gemini-1.5-flash")
-
     prompt = f"""
 You are an agricultural AI expert.
 
@@ -72,10 +72,10 @@ A plant leaf was classified as:
 - Class: {classes[pred_class]}
 - Confidence: {confidence:.2f}%
 
-Give a short explanation for a farmer:
+Give:
 1. Meaning
 2. Possible cause
-3. Advice
+3. Advice for farmers
 """
 
     response = model_ai.generate_content(prompt)
@@ -107,8 +107,8 @@ if uploaded_file:
             output = model(img_tensor)
             probs = torch.softmax(output, dim=1)[0].numpy()
 
-        pred_class = np.argmax(probs)
-        confidence = probs[pred_class] * 100
+        pred_class = int(np.argmax(probs))
+        confidence = float(probs[pred_class]) * 100
 
     # ================= RESULT =================
     with col2:
@@ -133,7 +133,12 @@ if uploaded_file:
     st.divider()
     st.subheader("🧠 Gemini AI Interpretation")
 
-    with st.spinner("🤖 Gemini is thinking..."):
-        explanation = gemini_interpretation(pred_class, confidence)
+    try:
+        with st.spinner("🤖 Gemini is thinking..."):
+            explanation = gemini_interpretation(pred_class, confidence)
 
-    st.write(explanation)
+        st.write(explanation)
+
+    except Exception as e:
+        st.error("Gemini AI failed to respond. Check API key or quota.")
+        st.code(str(e))
