@@ -4,3 +4,5 @@ pillow
 plotly
 google-generativeai
 requests
+torch
+torchvision
