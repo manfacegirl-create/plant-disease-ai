@@ -10,8 +10,8 @@ import google.generativeai as genai
 
 # ================= PAGE CONFIG =================
 st.set_page_config(
-    page_title="Neural Vision Dashboard",
-    page_icon="🧠",
+    page_title="LeftSentry Ai"
+    page_icon="🌿",
     layout="wide"
 )
 
