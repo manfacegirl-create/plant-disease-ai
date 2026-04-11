@@ -16,7 +16,7 @@ st.set_page_config(
 
 # ================= GEMINI SETUP =================
 genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
-model_ai = genai.GenerativeModel("gemini-1.0-pro")
+model_ai = genai.GenerativeModel("gemini-1.5-flash")
 
 # ================= SIDEBAR =================
 st.sidebar.title("🌿 Plant AI System")
