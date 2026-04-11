@@ -1,5 +1,6 @@
-streamlit
 --extra-index-url https://download.pytorch.org/whl/cpu
+
+streamlit
 torch==2.2.2
 torchvision==0.17.2
 pillow
