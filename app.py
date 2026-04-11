@@ -8,7 +8,7 @@ import numpy as np
 import plotly.express as px
 import google.generativeai as genai
 import os
-import requests
+import gdown
 
 # ================= PAGE CONFIG =================
 st.set_page_config(
@@ -28,8 +28,6 @@ model_choice = st.sidebar.selectbox(
     "Choose Model",
     ["CNN", "ResNet50", "Auto (Best)"]
 )
-
-st.sidebar.info("Upload a leaf image and get prediction.")
 
 classes = ["🌱 Healthy", "🍂 Diseased"]
 
@@ -66,20 +64,19 @@ class ResNetModel(nn.Module):
     def forward(self, x):
         return self.model(x)
 
-# ================= DOWNLOAD RESNET =================
+# ================= DOWNLOAD RESNET (FIXED) =================
 def download_resnet():
-    url = "https://drive.google.com/uc?export=download&id=1D53PoSyh3aze-EobeTpHcBJobB38xyAS"
+    file_id = "1D53PoSyh3aze-EobeTpHcBJobB38xyAS"
+    url = f"https://drive.google.com/uc?id={file_id}"
     path = "resnet.pth"
 
     if not os.path.exists(path):
         with st.spinner("Downloading ResNet model..."):
-            r = requests.get(url)
-            with open(path, "wb") as f:
-                f.write(r.content)
+            gdown.download(url, path, quiet=False)
 
     return path
 
-# ================= LOAD MODELS (FIXED) =================
+# ================= LOAD MODELS (FULL FIX) =================
 @st.cache_resource
 def load_models():
 
@@ -88,7 +85,7 @@ def load_models():
     cnn_path = "cnn.pth"
 
     if not os.path.exists(cnn_path):
-        st.error("❌ cnn.pth not found in project directory")
+        st.error("❌ cnn.pth missing in project folder")
         st.stop()
 
     cnn.load_state_dict(torch.load(cnn_path, map_location="cpu"))
@@ -98,7 +95,15 @@ def load_models():
     resnet = ResNetModel()
     resnet_path = download_resnet()
 
-    resnet_state = torch.load(resnet_path, map_location="cpu")
+    # DEBUG (optional)
+    st.write("ResNet file size:", os.path.getsize(resnet_path))
+
+    resnet_state = torch.load(
+        resnet_path,
+        map_location="cpu",
+        weights_only=True
+    )
+
     resnet.load_state_dict(resnet_state)
     resnet.eval()
 
