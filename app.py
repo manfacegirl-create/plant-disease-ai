@@ -14,14 +14,14 @@ st.set_page_config(
     layout="wide"
 )
 
-# ================= CLEAN WHITE THEME =================
+# ================= CLEAN MODERN WHITE THEME =================
 st.markdown("""
 <style>
 
 /* MAIN BACKGROUND */
 [data-testid="stAppViewContainer"] {
     background-color: #ffffff;
-    color: #111111;
+    color: #000000;
 }
 
 /* HEADER */
@@ -31,63 +31,78 @@ st.markdown("""
 
 /* SIDEBAR */
 [data-testid="stSidebar"] {
-    background-color: #f5f5f5;
+    background-color: #f7f7f7;
+    border-right: 1px solid #e6e6e6;
 }
 
 /* GLOBAL TEXT */
 html, body, [class*="css"] {
-    color: #111111 !important;
-    font-family: Arial;
+    color: #000000 !important;
+    font-family: "Arial";
 }
 
 /* HEADINGS */
 h1, h2, h3, h4 {
-    color: #111111 !important;
-}
-
-/* FILE UPLOADER */
-[data-testid="stFileUploader"] {
-    background-color: #ffffff;
-    border: 1px solid #dddddd;
-    border-radius: 10px;
-    padding: 10px;
+    color: #000000 !important;
+    font-weight: 600;
 }
 
 /* CARD STYLE */
 .card {
     background-color: #ffffff;
-    border: 1px solid #e0e0e0;
-    border-radius: 12px;
-    padding: 15px;
+    border: 1px solid #e6e6e6;
+    border-radius: 14px;
+    padding: 16px;
     margin-bottom: 15px;
-    color: #111111;
+    box-shadow: 0px 2px 8px rgba(0,0,0,0.05);
+}
+
+/* FILE UPLOADER (IMPORTANT FIX) */
+[data-testid="stFileUploader"] {
+    background-color: #ffffff;
+    border: 2px dashed #000000;
+    border-radius: 12px;
+    padding: 20px;
+}
+
+/* UPLOADER TEXT */
+[data-testid="stFileUploader"] section {
+    color: #000000 !important;
 }
 
 /* BUTTONS */
 .stButton>button {
-    background-color: #111111;
+    background-color: #000000;
     color: #ffffff;
-    border-radius: 8px;
-    padding: 8px 16px;
+    border-radius: 10px;
+    padding: 8px 18px;
     border: none;
+    font-weight: 500;
 }
 
 /* PROGRESS BAR */
 .stProgress > div > div > div > div {
-    background-color: #111111;
+    background-color: #000000;
 }
 
-/* PLOTLY FIX */
+/* PLOTLY CLEAN */
 .js-plotly-plot {
     background-color: #ffffff !important;
+}
+
+/* REMOVE ANY HIDDEN GREY TEXT ISSUES */
+p, span, label {
+    color: #000000 !important;
 }
 
 </style>
 """, unsafe_allow_html=True)
 
 # ================= TITLE =================
-st.title("Plant Health Analyzer")
-st.caption("Leaf Classification System (CNN Model)")
+st.title("🌿 Plant Health Analyzer")
+st.caption("Simple Leaf Disease Classification System")
+
+st.markdown("---")
 
 # ================= CLASSES =================
 classes = ["Diseased", "Healthy"]
@@ -127,9 +142,9 @@ def load_model():
 
 model = load_model()
 
-# ================= UPLOAD =================
+# ================= FILE UPLOAD =================
 uploaded_file = st.file_uploader(
-    "Upload Leaf Image",
+    "📤 Upload a leaf image for analysis",
     type=["jpg", "png", "jpeg"]
 )
 
@@ -143,13 +158,13 @@ if uploaded_file:
     # IMAGE CARD
     with col1:
         st.markdown('<div class="card">', unsafe_allow_html=True)
-        st.subheader("Input Image")
+        st.subheader("📷 Uploaded Image")
         st.image(image, use_container_width=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
     img_tensor = transform(image).unsqueeze(0)
 
-    # PREDICTION
+    # PREDICT
     with st.spinner("Analyzing image..."):
         with torch.no_grad():
             output = model(img_tensor)
@@ -161,12 +176,12 @@ if uploaded_file:
     # RESULT CARD
     with col2:
         st.markdown('<div class="card">', unsafe_allow_html=True)
-        st.subheader("Prediction Result")
+        st.subheader("📊 Prediction Result")
 
         if pred_class == 0:
-            st.error(f"Diseased ({confidence:.2f}%)")
+            st.error(f"❌ Diseased ({confidence:.2f}%)")
         else:
-            st.success(f"Healthy ({confidence:.2f}%)")
+            st.success(f"✅ Healthy ({confidence:.2f}%)")
 
         st.progress(int(confidence))
 
@@ -184,10 +199,13 @@ if uploaded_file:
 
         st.plotly_chart(fig, use_container_width=True)
 
-        status = "LOW RISK" if pred_class == 1 else "HIGH RISK"
-        st.info(f"Status: {status}")
+        # STATUS BOX
+        if pred_class == 1:
+            st.success("Status: LOW RISK 🌱")
+        else:
+            st.error("Status: HIGH RISK ⚠️")
 
         st.markdown('</div>', unsafe_allow_html=True)
 
 else:
-    st.info("Upload a leaf image to start analysis.")
+    st.info("📌 Please upload a leaf image to begin analysis.")
