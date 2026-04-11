@@ -8,7 +8,6 @@ import numpy as np
 import plotly.express as px
 import pandas as pd
 
-# Try Gemini import safely
 try:
     import google.generativeai as genai
     GEMINI_AVAILABLE = True
@@ -22,7 +21,10 @@ st.set_page_config(
     layout="wide"
 )
 
-# ================= UI =================
+# ================= UI (MUST BE FIRST) =================
+st.title("🌿 LeafSentry AI")
+st.caption("CNN Plant Disease Detection System")
+
 st.markdown("""
 <style>
 [data-testid="stAppViewContainer"] {
@@ -41,7 +43,6 @@ h1, h2, h3 {
     border: 1px solid rgba(125,211,252,0.25);
     border-radius: 16px;
     padding: 16px;
-    backdrop-filter: blur(12px);
 }
 </style>
 """, unsafe_allow_html=True)
@@ -82,7 +83,7 @@ class CNN(nn.Module):
         x = x.view(x.size(0), -1)
         return self.fc(x)
 
-# ================= LOAD MODEL =================
+# ================= MODEL LOAD =================
 @st.cache_resource
 def load_model():
     try:
@@ -92,13 +93,13 @@ def load_model():
         model.eval()
         return model
     except Exception as e:
-        st.sidebar.error("❌ Model load failed")
+        st.sidebar.error("❌ Model Load Failed")
         st.sidebar.warning(str(e))
         return None
 
 model = load_model()
 
-# ================= GEMINI SAFE INIT =================
+# ================= GEMINI =================
 GEMINI_OK = False
 gemini_model = None
 GEMINI_ERROR = None
@@ -114,24 +115,35 @@ def init_gemini():
         api_key = st.secrets.get("GEMINI_API_KEY", None)
 
         if not api_key:
-            GEMINI_ERROR = "Missing API key in secrets.toml"
+            GEMINI_ERROR = "Missing API key"
             return
 
         genai.configure(api_key=api_key)
 
-        # ONLY SAFE MODEL (NO 404 RISK)
-        gemini_model = genai.GenerativeModel("gemini-pro")
+        # FIXED: only working models
+        models_to_try = [
+            "gemini-1.5-flash",
+            "gemini-1.5-pro"
+        ]
 
-        # test call (safe)
-        test = gemini_model.generate_content("Hi")
+        for m in models_to_try:
+            try:
+                temp = genai.GenerativeModel(m)
+                test = temp.generate_content("test")
 
-        if test and hasattr(test, "text"):
-            GEMINI_OK = True
-        else:
-            GEMINI_ERROR = "Gemini test failed"
+                if test and hasattr(test, "text"):
+                    gemini_model = temp
+                    GEMINI_OK = True
+                    return
+            except:
+                continue
+
+        GEMINI_ERROR = "No Gemini model available"
+        GEMINI_OK = False
 
     except Exception as e:
         GEMINI_ERROR = str(e)
+        GEMINI_OK = False
 
 init_gemini()
 
@@ -142,15 +154,15 @@ if "history" not in st.session_state:
 # ================= OFFLINE AI =================
 def offline_ai(pred, conf):
     return f"""
-🔍 Offline AI Report
+🔍 Offline Report
 
 Prediction: {classes[pred]}
 Confidence: {conf:.2f}%
 
 Advice:
 - Monitor plant health
+- Maintain proper watering
 - Check leaves regularly
-- Adjust watering
 """
 
 # ================= AI RESPONSE =================
@@ -168,7 +180,7 @@ Reason:
 
     try:
         prompt = f"""
-You are an expert plant disease AI.
+You are a plant disease expert.
 
 Plant status: {classes[pred]}
 Confidence: {conf:.2f}%
@@ -179,10 +191,8 @@ Give:
 - Treatment
 - Prevention
 """
-
         res = gemini_model.generate_content(prompt)
         return res.text
-
     except Exception as e:
         return f"Gemini error: {str(e)}"
 
@@ -258,4 +268,4 @@ else:
     st.sidebar.error("Gemini OFFLINE ❌")
     st.sidebar.warning(GEMINI_ERROR)
 
-st.sidebar.info("Stable Production Version")
+st.sidebar.info("Stable Production Build")
