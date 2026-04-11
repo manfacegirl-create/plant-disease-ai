@@ -2,6 +2,7 @@ import streamlit as st
 import torch
 import torch.nn as nn
 from torchvision import transforms
+from torchvision.models import resnet50
 from PIL import Image
 import numpy as np
 import plotly.express as px
@@ -16,19 +17,27 @@ st.set_page_config(
 
 # ================= GEMINI SETUP =================
 genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
-
-# ✅ FIX: create model ONCE (not inside function)
 model_ai = genai.GenerativeModel("gemini-1.5-flash")
 
 # ================= SIDEBAR =================
 st.sidebar.title("🌿 Plant AI System")
-st.sidebar.info("Upload a leaf image and get instant prediction.")
 
-st.sidebar.markdown("### Model Info")
-st.sidebar.write("CNN-based classifier")
-st.sidebar.write("Classes: Healthy / Diseased")
+model_choice = st.sidebar.selectbox(
+    "Choose Model",
+    ["CNN", "ResNet50", "Auto (Best)"]
+)
 
-# ================= MODEL =================
+st.sidebar.info("Upload a leaf image and get prediction.")
+
+classes = ["🌱 Healthy", "🍂 Diseased"]
+
+# ================= TRANSFORM =================
+transform = transforms.Compose([
+    transforms.Resize((224, 224)),
+    transforms.ToTensor(),
+])
+
+# ================= CNN MODEL =================
 class CNN(nn.Module):
     def __init__(self):
         super().__init__()
@@ -45,23 +54,42 @@ class CNN(nn.Module):
         x = x.view(x.size(0), -1)
         return self.fc(x)
 
-# ================= LOAD MODEL =================
+# ================= RESNET MODEL =================
+class ResNetModel(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.model = resnet50(weights=None)
+        self.model.fc = nn.Linear(self.model.fc.in_features, 2)
+
+    def forward(self, x):
+        return self.model(x)
+
+# ================= LOAD MODELS =================
 @st.cache_resource
-def load_model():
-    model = CNN()
-    model.load_state_dict(torch.load("cnn.pth", map_location="cpu"))
-    model.eval()
-    return model
+def load_models():
+    cnn = CNN()
+    cnn.load_state_dict(torch.load("cnn.pth", map_location="cpu"))
+    cnn.eval()
 
-model = load_model()
+    resnet = ResNetModel()
+    resnet.load_state_dict(torch.load("resnet.pth", map_location="cpu"))
+    resnet.eval()
 
-# ================= TRANSFORM =================
-transform = transforms.Compose([
-    transforms.Resize((224, 224)),
-    transforms.ToTensor(),
-])
+    return cnn, resnet
 
-classes = ["🌱 Healthy", "🍂 Diseased"]
+cnn_model, resnet_model = load_models()
+
+# ================= AUTO MODEL LOGIC =================
+def get_model(choice):
+    if choice == "CNN":
+        return cnn_model
+    elif choice == "ResNet50":
+        return resnet_model
+    else:
+        # Auto mode → you can change later to best accuracy logic
+        return resnet_model
+
+model = get_model(model_choice)
 
 # ================= GEMINI FUNCTION =================
 def gemini_interpretation(pred_class, confidence):
@@ -77,32 +105,32 @@ Give:
 2. Possible cause
 3. Advice for farmers
 """
-
     response = model_ai.generate_content(prompt)
     return response.text
 
 # ================= TITLE =================
 st.title("🌿 Plant Disease Detection AI")
-st.caption("Deep Learning CNN Model + Gemini AI Interpretation")
+st.caption("CNN + ResNet50 + Gemini AI Assistant")
 
+# ================= UPLOAD =================
 uploaded_file = st.file_uploader(
-    "📤 Upload a leaf image (JPG, PNG, JPEG)",
+    "📤 Upload a leaf image",
     type=["jpg", "png", "jpeg"]
 )
 
 # ================= PREDICTION =================
 if uploaded_file:
 
-    col1, col2 = st.columns([1, 1])
-
     image = Image.open(uploaded_file).convert("RGB")
 
+    col1, col2 = st.columns(2)
+
     with col1:
-        st.image(image, caption="Uploaded Leaf Image", use_container_width=True)
+        st.image(image, caption="Uploaded Leaf", use_container_width=True)
 
     img_tensor = transform(image).unsqueeze(0)
 
-    with st.spinner("🧠 AI is analyzing the leaf..."):
+    with st.spinner("🧠 AI analyzing..."):
         with torch.no_grad():
             output = model(img_tensor)
             probs = torch.softmax(output, dim=1)[0].numpy()
@@ -110,9 +138,9 @@ if uploaded_file:
         pred_class = int(np.argmax(probs))
         confidence = float(probs[pred_class]) * 100
 
-    # ================= RESULT =================
+    # ================= RESULTS =================
     with col2:
-        st.subheader("📊 Prediction Result")
+        st.subheader("📊 Prediction")
 
         if pred_class == 1:
             st.error(f"🍂 Diseased ({confidence:.2f}%)")
@@ -124,21 +152,20 @@ if uploaded_file:
         fig = px.bar(
             x=classes,
             y=probs * 100,
-            color=classes,
             labels={"x": "Class", "y": "Confidence (%)"}
         )
         st.plotly_chart(fig, use_container_width=True)
 
-    # ================= GEMINI AI =================
+    # ================= GEMINI =================
     st.divider()
-    st.subheader("🧠 Gemini AI Interpretation")
+    st.subheader("🧠 Gemini AI Advice")
 
     try:
-        with st.spinner("🤖 Gemini is thinking..."):
+        with st.spinner("Gemini thinking..."):
             explanation = gemini_interpretation(pred_class, confidence)
 
         st.write(explanation)
 
     except Exception as e:
-        st.error("Gemini AI failed to respond. Check API key or quota.")
+        st.error("Gemini failed (API issue or quota).")
         st.code(str(e))
