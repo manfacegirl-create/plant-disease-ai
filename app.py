@@ -7,6 +7,8 @@ from PIL import Image
 import numpy as np
 import plotly.express as px
 import google.generativeai as genai
+import os
+import requests
 
 # ================= PAGE CONFIG =================
 st.set_page_config(
@@ -64,30 +66,45 @@ class ResNetModel(nn.Module):
     def forward(self, x):
         return self.model(x)
 
+# ================= DOWNLOAD RESNET FROM GOOGLE DRIVE =================
+def download_resnet():
+    url = "https://drive.google.com/uc?export=download&id=1D53PoSyh3aze-EobeTpHcBJobB38xyAS"
+    path = "resnet.pth"
+
+    if not os.path.exists(path):
+        with st.spinner("Downloading ResNet model..."):
+            r = requests.get(url)
+            with open(path, "wb") as f:
+                f.write(r.content)
+
+    return path
+
 # ================= LOAD MODELS =================
 @st.cache_resource
 def load_models():
+    # CNN (local)
     cnn = CNN()
     cnn.load_state_dict(torch.load("cnn.pth", map_location="cpu"))
     cnn.eval()
 
+    # ResNet (download if needed)
     resnet = ResNetModel()
-    resnet.load_state_dict(torch.load("resnet.pth", map_location="cpu"))
+    resnet_path = download_resnet()
+    resnet.load_state_dict(torch.load(resnet_path, map_location="cpu"))
     resnet.eval()
 
     return cnn, resnet
 
 cnn_model, resnet_model = load_models()
 
-# ================= AUTO MODEL LOGIC =================
+# ================= MODEL SELECT =================
 def get_model(choice):
     if choice == "CNN":
         return cnn_model
     elif choice == "ResNet50":
         return resnet_model
     else:
-        # Auto mode → you can change later to best accuracy logic
-        return resnet_model
+        return cnn_model  # Auto default (you can improve later)
 
 model = get_model(model_choice)
 
@@ -110,7 +127,7 @@ Give:
 
 # ================= TITLE =================
 st.title("🌿 Plant Disease Detection AI")
-st.caption("CNN + ResNet50 + Gemini AI Assistant")
+st.caption("CNN + ResNet50 + Gemini AI (FYP Project)")
 
 # ================= UPLOAD =================
 uploaded_file = st.file_uploader(
@@ -138,9 +155,9 @@ if uploaded_file:
         pred_class = int(np.argmax(probs))
         confidence = float(probs[pred_class]) * 100
 
-    # ================= RESULTS =================
+    # ================= RESULT =================
     with col2:
-        st.subheader("📊 Prediction")
+        st.subheader("📊 Prediction Result")
 
         if pred_class == 1:
             st.error(f"🍂 Diseased ({confidence:.2f}%)")
