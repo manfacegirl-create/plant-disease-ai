@@ -1,12 +1,9 @@
---extra-index-url https://download.pytorch.org/whl/cpu
-
 streamlit
-torch
-torchvision
+torch==2.2.2
+torchvision==0.17.2
 pillow
-matplotlib
 numpy
+matplotlib
 plotly
 google-generativeai
-
-
+requests
