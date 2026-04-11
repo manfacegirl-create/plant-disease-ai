@@ -11,7 +11,7 @@ import google.generativeai as genai
 
 # ================= PAGE CONFIG =================
 st.set_page_config(
-    page_title="LeafSentry AI Pro",
+    page_title="LeafSentry AI",
     page_icon="🌿",
     layout="wide"
 )
@@ -40,7 +40,7 @@ h1, h2, h3 {
 </style>
 """, unsafe_allow_html=True)
 
-# ================= GEMINI (PERMANENT FIX) =================
+# ================= GEMINI FIXED =================
 GEMINI_OK = False
 model_ai = None
 GEMINI_ERROR = None
@@ -52,33 +52,31 @@ def init_gemini():
         api_key = st.secrets.get("GEMINI_API_KEY", None)
 
         if not api_key:
-            GEMINI_ERROR = "Missing GEMINI_API_KEY in secrets.toml"
+            GEMINI_ERROR = "Missing GEMINI_API_KEY"
             return
 
         genai.configure(api_key=api_key)
 
-        model_ai = genai.GenerativeModel("gemini-1.5-flash")
+        # ✅ FIXED MODEL NAME
+        model_ai = genai.GenerativeModel("gemini-1.5-flash-latest")
 
-        # 🔥 TEST CALL (IMPORTANT)
-        test = model_ai.generate_content("Say OK")
-
-        if not test or not hasattr(test, "text"):
-            GEMINI_ERROR = "Gemini test call failed"
+        # test call
+        test = model_ai.generate_content("OK")
+        if not test:
+            GEMINI_ERROR = "Gemini test failed"
             return
 
         GEMINI_OK = True
-        GEMINI_ERROR = None
 
     except Exception as e:
         GEMINI_ERROR = str(e)
         GEMINI_OK = False
 
-
 init_gemini()
 
 # ================= TITLE =================
-st.title("🌿 LeafSentry AI Pro (Stable + Gemini Fixed)")
-st.caption("Production-Ready Plant Disease Detection System")
+st.title("🌿 LeafSentry AI Pro (Fully Fixed)")
+st.caption("Stable CNN + Working Gemini Integration")
 
 # ================= CLASSES =================
 classes = ["Diseased", "Healthy"]
@@ -91,11 +89,13 @@ transform = transforms.Compose([
                          [0.229, 0.224, 0.225])
 ])
 
-# ================= MODEL =================
+# ================= MODEL (MATCH TRAINING) =================
 class CNN(nn.Module):
     def __init__(self):
         super().__init__()
-        self.features = nn.Sequential(
+
+        # 🔥 MUST MATCH YOUR TRAINED MODEL (net)
+        self.net = nn.Sequential(
             nn.Conv2d(3, 32, 3, padding=1),
             nn.ReLU(),
             nn.MaxPool2d(2),
@@ -109,21 +109,23 @@ class CNN(nn.Module):
 
             nn.AdaptiveAvgPool2d(1)
         )
+
         self.fc = nn.Linear(128, 2)
 
     def forward(self, x):
-        x = self.features(x)
+        x = self.net(x)
         x = x.view(x.size(0), -1)
         return self.fc(x)
 
-# ================= LOAD MODEL =================
+# ================= LOAD MODEL (SAFE) =================
 @st.cache_resource
 def load_model():
     model = CNN()
 
     try:
-        state_dict = torch.load("cnn.pth", map_location="cpu")
-        model.load_state_dict(state_dict)
+        state = torch.load("cnn.pth", map_location="cpu")
+        model.load_state_dict(state)   # STRICT MATCH
+
         model.eval()
         return model
 
@@ -133,6 +135,10 @@ def load_model():
         return None
 
 model = load_model()
+
+# ================= HISTORY =================
+if "history" not in st.session_state:
+    st.session_state.history = []
 
 # ================= AI FALLBACK =================
 def offline_ai(pred, conf):
@@ -145,44 +151,31 @@ Confidence: {conf:.2f}%
 Advice:
 - Monitor plant health
 - Maintain irrigation
-- Apply preventive care if diseased
+- Apply treatment if diseased
 """
 
-# ================= GEMINI FUNCTION (FIXED) =================
+# ================= GEMINI =================
 def gemini_advice(pred, conf):
     if not GEMINI_OK:
-        return f"""
-❌ GEMINI OFFLINE
-
-Reason:
-{GEMINI_ERROR}
-
---- Offline Mode Active ---
-{offline_ai(pred, conf)}
-"""
+        return f"❌ Gemini Offline\n\n{GEMINI_ERROR}\n\n{offline_ai(pred, conf)}"
 
     try:
         prompt = f"""
-You are an expert agricultural AI.
+Plant: {classes[pred]}
+Confidence: {conf:.2f}%
 
-Plant status: {classes[pred]} ({conf:.2f}% confidence)
-
-Provide:
-1. Meaning
-2. Cause
-3. Treatment
-4. Prevention
+Give:
+- Meaning
+- Cause
+- Treatment
+- Prevention
 """
 
         response = model_ai.generate_content(prompt)
-        return response.text if response else "Empty response"
+        return response.text
 
     except Exception as e:
-        return f"❌ Gemini runtime error: {str(e)}"
-
-# ================= SESSION =================
-if "history" not in st.session_state:
-    st.session_state.history = []
+        return f"❌ Gemini error: {str(e)}"
 
 # ================= UPLOAD =================
 uploaded_file = st.file_uploader("Upload Leaf Image", type=["jpg", "png", "jpeg"])
@@ -195,13 +188,10 @@ if uploaded_file:
     col1, col2 = st.columns(2)
 
     with col1:
-        st.markdown('<div class="card">', unsafe_allow_html=True)
-        st.subheader("Input Image")
         st.image(image, use_container_width=True)
-        st.markdown('</div>', unsafe_allow_html=True)
 
-    # ================= PREDICTION =================
-    with st.spinner("Analyzing plant..."):
+    # ================= PREDICT =================
+    with st.spinner("Analyzing..."):
 
         if model is None:
             probs = np.array([0.5, 0.5])
@@ -220,8 +210,7 @@ if uploaded_file:
 
     # ================= RESULT =================
     with col2:
-        st.markdown('<div class="card">', unsafe_allow_html=True)
-        st.subheader("Prediction Result")
+        st.subheader("Prediction")
 
         if classes[pred] == "Diseased":
             st.error("🚨 Diseased Plant")
@@ -232,20 +221,17 @@ if uploaded_file:
 
         fig = px.bar(
             x=classes,
-            y=probs * 100,
-            labels={"x": "Class", "y": "Confidence"}
+            y=probs * 100
         )
         st.plotly_chart(fig, use_container_width=True)
 
-        st.markdown('</div>', unsafe_allow_html=True)
-
-    # ================= AI REPORT =================
+    # ================= AI =================
     st.subheader("🧠 AI Diagnosis Report")
     st.write(gemini_advice(pred, conf))
 
 # ================= HISTORY =================
 st.divider()
-st.subheader("📊 Prediction History")
+st.subheader("📊 History")
 
 if st.session_state.history:
     st.dataframe(pd.DataFrame(st.session_state.history))
@@ -255,15 +241,15 @@ else:
 # ================= SIDEBAR =================
 st.sidebar.title("System Status")
 
-if model is not None:
-    st.sidebar.success("CNN Model Loaded")
+if model:
+    st.sidebar.success("CNN Loaded")
 else:
-    st.sidebar.error("Model Not Loaded")
+    st.sidebar.error("CNN Failed")
 
 if GEMINI_OK:
-    st.sidebar.success("Gemini AI ONLINE 🧠")
+    st.sidebar.success("Gemini ONLINE 🧠")
 else:
     st.sidebar.error("Gemini OFFLINE ❌")
     st.sidebar.warning(GEMINI_ERROR)
 
-st.sidebar.info("System: Stable Production Build")
+st.sidebar.info("System Stable + Fixed Version")
