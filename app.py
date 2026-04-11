@@ -7,8 +7,6 @@ from PIL import Image
 import numpy as np
 import plotly.express as px
 import google.generativeai as genai
-import cv2
-import matplotlib.pyplot as plt
 
 # ================= PAGE CONFIG =================
 st.set_page_config(
@@ -17,50 +15,45 @@ st.set_page_config(
     layout="wide"
 )
 
-# ================= FUTURISTIC UI =================
+# ================= CLEAN MODERN UI =================
 st.markdown("""
 <style>
 
 [data-testid="stAppViewContainer"] {
-    background: radial-gradient(circle at top, #050816, #000000);
-    color: #ffffff;
+    background: linear-gradient(135deg, #0b0f1a, #050816);
+    color: white;
 }
 
 [data-testid="stSidebar"] {
-    background: linear-gradient(180deg, #0b0f1a, #05070d);
-    border-right: 1px solid #2b3a55;
-}
-
-html, body, [class*="css"] {
-    color: #ffffff !important;
-    font-family: "Segoe UI";
+    background: #0a0f1c;
+    border-right: 1px solid #1f2a44;
 }
 
 h1, h2, h3 {
     color: #7dd3fc !important;
-    text-shadow: 0 0 12px #3b82f6, 0 0 20px #8b5cf6;
 }
 
 .card {
-    background: rgba(255,255,255,0.05);
-    backdrop-filter: blur(12px);
-    border: 1px solid rgba(125,211,252,0.3);
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(125,211,252,0.25);
     border-radius: 16px;
-    padding: 18px;
-    margin-bottom: 15px;
+    padding: 16px;
+    backdrop-filter: blur(10px);
+    margin-bottom: 12px;
 }
 
 .stButton>button {
     background: linear-gradient(90deg, #3b82f6, #8b5cf6);
     color: white;
-    border-radius: 12px;
+    border-radius: 10px;
+    border: none;
 }
 
 [data-testid="stFileUploader"] {
-    background: rgba(255,255,255,0.05);
     border: 1px dashed #3b82f6;
-    padding: 15px;
-    border-radius: 12px;
+    padding: 12px;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.03);
 }
 
 </style>
@@ -76,7 +69,7 @@ except:
 
 # ================= TITLE =================
 st.title("🧠 LeftSentry AI Dashboard")
-st.caption("Plant Disease Detection + Explainable AI System")
+st.caption("CNN Plant Disease Detection System")
 
 # ================= CLASSES =================
 classes = ["Diseased", "Healthy"]
@@ -125,38 +118,29 @@ def load_model():
 model = load_model()
 
 # ================= GEMINI =================
-def gemini_advice(pred_class, confidence):
+def gemini_advice(pred, conf):
 
     if not GEMINI_OK:
         return "⚠️ Gemini not configured."
 
     try:
         prompt = f"""
-A plant leaf was classified as {classes[pred_class]} with confidence {confidence:.2f}%.
+A plant leaf is classified as {classes[pred]} with confidence {conf:.2f}%.
 Give:
 1. Meaning
 2. Cause
-3. Farmer advice
+3. Advice
 """
         return model_ai.generate_content(prompt).text
-
     except Exception as e:
-        return str(e)
+        return f"Error: {str(e)}"
 
-# ================= GRAD-CAM (SIMPLE VERSION) =================
-def generate_gradcam(image_tensor):
-    img = image_tensor.squeeze().permute(1,2,0).numpy()
-    img = (img - img.min()) / (img.max() - img.min())
-    heatmap = np.random.rand(224,224)  # simplified demo heatmap
-    heatmap = cv2.applyColorMap(np.uint8(255*heatmap), cv2.COLORMAP_JET)
-    return heatmap
-
-# ================= HISTORY =================
+# ================= SESSION HISTORY =================
 if "history" not in st.session_state:
     st.session_state.history = []
 
 # ================= UPLOAD =================
-uploaded_file = st.file_uploader("Upload Leaf Image", type=["jpg","png","jpeg"])
+uploaded_file = st.file_uploader("Upload Leaf Image", type=["jpg", "png", "jpeg"])
 
 if uploaded_file:
 
@@ -173,8 +157,8 @@ if uploaded_file:
 
     img_tensor = transform(image).unsqueeze(0)
 
-    # PREDICT
-    with st.spinner("Running AI analysis..."):
+    # PREDICTION
+    with st.spinner("Analyzing..."):
         with torch.no_grad():
             output = model(img_tensor)
             probs = torch.softmax(output, dim=1)[0].numpy()
@@ -184,28 +168,28 @@ if uploaded_file:
 
     # SAVE HISTORY
     st.session_state.history.append({
-        "class": classes[pred],
-        "confidence": conf
+        "Result": classes[pred],
+        "Confidence": round(conf, 2)
     })
 
-    # RESULT
+    # RESULT PANEL
     with col2:
         st.markdown('<div class="card">', unsafe_allow_html=True)
-        st.subheader("Prediction")
+        st.subheader("Prediction Result")
 
         if pred == 0 and conf > 70:
-            st.error("HIGH RISK DISEASE ⚠️")
+            st.error("⚠️ HIGH RISK DISEASE")
         elif pred == 0:
-            st.warning("Possible Disease Detected")
+            st.warning("Possible Disease")
         else:
-            st.success("Plant Healthy 🌱")
+            st.success("Healthy Plant 🌱")
 
         st.progress(min(int(conf), 100))
 
         fig = px.bar(
             x=classes,
             y=probs * 100,
-            labels={"x": "Class", "y": "Confidence"}
+            labels={"x": "Class", "y": "Confidence (%)"}
         )
 
         st.plotly_chart(fig, use_container_width=True)
@@ -214,22 +198,21 @@ if uploaded_file:
 
     # ================= GEMINI =================
     st.divider()
-    st.subheader("🧠 Gemini AI Insight")
+    st.subheader("🧠 AI Insight")
 
     st.write(gemini_advice(pred, conf))
 
-    # ================= GRAD-CAM =================
-    st.subheader("🔥 Model Attention Map (Grad-CAM)")
-    heat = generate_gradcam(img_tensor)
-    st.image(heat, caption="Model Focus Areas")
-
-# ================= HISTORY TABLE =================
+# ================= HISTORY =================
 st.divider()
 st.subheader("📊 Prediction History")
-st.dataframe(st.session_state.history)
+
+if len(st.session_state.history) > 0:
+    st.dataframe(st.session_state.history)
+else:
+    st.info("No predictions yet.")
 
 # ================= SIDEBAR =================
 st.sidebar.title("System Status")
 st.sidebar.write("✔ CNN Model Loaded")
-st.sidebar.write("✔ Gemini AI Active" if GEMINI_OK else "❌ Gemini OFF")
-st.sidebar.write("✔ Grad-CAM Enabled")
+st.sidebar.write("✔ UI Stable Version")
+st.sidebar.write("✔ Gemini Enabled" if GEMINI_OK else "❌ Gemini OFF")
