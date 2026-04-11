@@ -10,10 +10,69 @@ import google.generativeai as genai
 
 # ================= PAGE CONFIG =================
 st.set_page_config(
-    page_title="Plant Disease AI",
+    page_title="Plant AI Pro",
     page_icon="🌿",
     layout="wide"
 )
+
+# ================= MODERN UI STYLE =================
+st.markdown("""
+<style>
+body {
+    background-color: #ffffff;
+}
+
+.main {
+    background-color: #ffffff;
+}
+
+.block-container {
+    padding-top: 2rem;
+    padding-left: 2rem;
+    padding-right: 2rem;
+}
+
+h1, h2, h3 {
+    color: #1a1a1a;
+    font-family: 'Arial';
+}
+
+/* CARD STYLE */
+.card {
+    background: #ffffff;
+    padding: 20px;
+    border-radius: 16px;
+    box-shadow: 0px 4px 20px rgba(0,0,0,0.08);
+    margin-bottom: 15px;
+}
+
+/* STATUS BADGES */
+.badge-healthy {
+    background-color: #d1fae5;
+    color: #065f46;
+    padding: 8px 12px;
+    border-radius: 10px;
+    font-weight: bold;
+}
+
+.badge-diseased {
+    background-color: #fee2e2;
+    color: #991b1b;
+    padding: 8px 12px;
+    border-radius: 10px;
+    font-weight: bold;
+}
+
+/* BUTTON STYLE */
+.stButton>button {
+    background-color: #16a34a;
+    color: white;
+    border-radius: 10px;
+    padding: 10px 20px;
+    border: none;
+}
+</style>
+""", unsafe_allow_html=True)
 
 # ================= GEMINI SETUP =================
 try:
@@ -23,14 +82,18 @@ try:
 except:
     GEMINI_OK = False
 
-# ================= SIDEBAR =================
-st.sidebar.title("🌿 Plant AI System")
-st.sidebar.info("CNN Model (Fixed Version)")
+# ================= TITLE =================
+st.title("🌿 Plant Disease AI Pro")
+st.caption("Modern AI-powered plant health analysis system")
 
-# ⚠️ FIXED CLASS ORDER (MATCH TRAINING)
+# ================= SIDEBAR =================
+st.sidebar.title("🌱 AI Control Panel")
+st.sidebar.info("CNN Model Active")
+
+# ================= CLASSES =================
 classes = ["🍂 Diseased", "🌱 Healthy"]
 
-# ================= TRANSFORM (FIXED) =================
+# ================= TRANSFORM =================
 transform = transforms.Compose([
     transforms.Resize((224, 224)),
     transforms.ToTensor(),
@@ -38,7 +101,7 @@ transform = transforms.Compose([
                          [0.229, 0.224, 0.225])
 ])
 
-# ================= CNN MODEL =================
+# ================= MODEL =================
 class CNN(nn.Module):
     def __init__(self):
         super().__init__()
@@ -55,7 +118,6 @@ class CNN(nn.Module):
         x = x.view(x.size(0), -1)
         return self.fc(x)
 
-# ================= LOAD MODEL =================
 @st.cache_resource
 def load_model():
     model = CNN()
@@ -65,53 +127,42 @@ def load_model():
 
 model = load_model()
 
-# ================= GEMINI FUNCTION =================
-def gemini_interpretation(pred_class, confidence):
+# ================= GEMINI =================
+def gemini_ai(pred_class, confidence):
     if not GEMINI_OK:
-        return "⚠️ Gemini API not configured."
+        return "⚠️ AI not configured"
 
     prompt = f"""
-You are an agricultural AI expert.
+You are a plant doctor AI.
 
-A plant leaf was classified as:
-- Class: {classes[pred_class]}
-- Confidence: {confidence:.2f}%
+Class: {classes[pred_class]}
+Confidence: {confidence:.2f}%
 
-Give:
-1. Meaning
-2. Possible cause
-3. Advice for farmers
+Give simple explanation + farmer advice.
 """
 
     try:
-        response = model_ai.generate_content(prompt)
-        return response.text
-    except Exception as e:
-        return f"⚠️ Gemini failed: {str(e)}"
-
-# ================= TITLE =================
-st.title("🌿 Plant Disease Detection AI")
-st.caption("Fixed CNN Model + Gemini AI")
+        return model_ai.generate_content(prompt).text
+    except:
+        return "AI temporarily unavailable"
 
 # ================= UPLOAD =================
-uploaded_file = st.file_uploader(
-    "📤 Upload a leaf image",
-    type=["jpg", "png", "jpeg"]
-)
+uploaded_file = st.file_uploader("📤 Upload Plant Leaf Image", type=["jpg","png","jpeg"])
 
-# ================= PREDICTION =================
 if uploaded_file:
 
     image = Image.open(uploaded_file).convert("RGB")
 
-    col1, col2 = st.columns(2)
+    col1, col2 = st.columns([1, 1])
 
+    # ================= IMAGE =================
     with col1:
-        st.image(image, caption="Uploaded Image", use_container_width=True)
+        st.markdown("### 📷 Uploaded Image")
+        st.image(image, use_container_width=True)
 
     img_tensor = transform(image).unsqueeze(0)
 
-    with st.spinner("🧠 AI analyzing..."):
+    with st.spinner("🔍 Analyzing plant health..."):
         with torch.no_grad():
             output = model(img_tensor)
             probs = torch.softmax(output, dim=1)[0].numpy()
@@ -119,32 +170,45 @@ if uploaded_file:
         pred_class = int(np.argmax(probs))
         confidence = float(probs[pred_class]) * 100
 
-    # ================= RESULT =================
+    # ================= RESULT CARD =================
     with col2:
-        st.subheader("📊 Prediction Result")
 
-        # ✅ FIXED LOGIC
+        st.markdown("### 📊 Analysis Result")
+
         if pred_class == 0:
-            st.error(f"🍂 Diseased ({confidence:.2f}%)")
+            st.markdown('<div class="badge-diseased">🍂 Diseased Plant</div>', unsafe_allow_html=True)
         else:
-            st.success(f"🌱 Healthy ({confidence:.2f}%)")
+            st.markdown('<div class="badge-healthy">🌱 Healthy Plant</div>', unsafe_allow_html=True)
 
         st.progress(int(confidence))
 
-        # Chart
+        st.metric(label="Confidence Score", value=f"{confidence:.2f}%")
+
         fig = px.bar(
             x=classes,
             y=probs * 100,
-            labels={"x": "Class", "y": "Confidence (%)"}
+            title="Prediction Breakdown"
         )
         st.plotly_chart(fig, use_container_width=True)
 
-        # 🔍 DEBUG (VERY IMPORTANT)
-        st.write("Raw probabilities:", probs)
+        # NEW FEATURE (NO EXTRA SETUP)
+        risk_level = "LOW 🌱" if confidence > 80 and pred_class == 1 else \
+                     "HIGH ⚠️" if pred_class == 0 else "MEDIUM 🌿"
 
-    # ================= GEMINI =================
-    st.divider()
-    st.subheader("🧠 AI Advice")
+        st.info(f"AI Risk Level: {risk_level}")
 
-    explanation = gemini_interpretation(pred_class, confidence)
-    st.write(explanation)
+    # ================= AI INSIGHT =================
+    st.markdown("---")
+    st.markdown("## 🧠 AI Plant Doctor Insight")
+
+    with st.spinner("Generating expert advice..."):
+        advice = gemini_ai(pred_class, confidence)
+
+    st.markdown(f"""
+    <div class="card">
+    {advice}
+    </div>
+    """, unsafe_allow_html=True)
+
+else:
+    st.info("👆 Upload a plant leaf image to start analysis")
