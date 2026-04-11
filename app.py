@@ -1,3 +1,9 @@
+import os
+
+# ================= FORCE INSTALL PYTORCH (STREAMLIT CLOUD FIX) =================
+os.system("pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu")
+
+# ================= IMPORTS =================
 import streamlit as st
 import torch
 import torch.nn as nn
@@ -7,8 +13,6 @@ from PIL import Image
 import numpy as np
 import plotly.express as px
 import google.generativeai as genai
-import os
-import gdown
 
 # ================= PAGE CONFIG =================
 st.set_page_config(
@@ -28,6 +32,8 @@ model_choice = st.sidebar.selectbox(
     "Choose Model",
     ["CNN", "ResNet50", "Auto (Best)"]
 )
+
+st.sidebar.info("Upload a leaf image and get prediction.")
 
 classes = ["🌱 Healthy", "🍂 Diseased"]
 
@@ -64,54 +70,39 @@ class ResNetModel(nn.Module):
     def forward(self, x):
         return self.model(x)
 
-# ================= DOWNLOAD RESNET (FIXED) =================
+# ================= DOWNLOAD RESNET FROM DRIVE =================
 def download_resnet():
-    file_id = "1D53PoSyh3aze-EobeTpHcBJobB38xyAS"
-    url = f"https://drive.google.com/uc?id={file_id}"
+    url = "https://drive.google.com/uc?export=download&id=1D53PoSyh3aze-EobeTpHcBJobB38xyAS"
     path = "resnet.pth"
 
     if not os.path.exists(path):
         with st.spinner("Downloading ResNet model..."):
-            gdown.download(url, path, quiet=False)
+            import requests
+            r = requests.get(url)
+            with open(path, "wb") as f:
+                f.write(r.content)
 
     return path
 
-# ================= LOAD MODELS (FULL FIX) =================
+# ================= LOAD MODELS =================
 @st.cache_resource
 def load_models():
-
-    # ===== CNN =====
+    # CNN
     cnn = CNN()
-    cnn_path = "cnn.pth"
-
-    if not os.path.exists(cnn_path):
-        st.error("❌ cnn.pth missing in project folder")
-        st.stop()
-
-    cnn.load_state_dict(torch.load(cnn_path, map_location="cpu"))
+    cnn.load_state_dict(torch.load("cnn.pth", map_location="cpu"))
     cnn.eval()
 
-    # ===== RESNET =====
+    # ResNet
     resnet = ResNetModel()
     resnet_path = download_resnet()
-
-    # DEBUG (optional)
-    st.write("ResNet file size:", os.path.getsize(resnet_path))
-
-    resnet_state = torch.load(
-        resnet_path,
-        map_location="cpu",
-        weights_only=True
-    )
-
-    resnet.load_state_dict(resnet_state)
+    resnet.load_state_dict(torch.load(resnet_path, map_location="cpu"))
     resnet.eval()
 
     return cnn, resnet
 
 cnn_model, resnet_model = load_models()
 
-# ================= MODEL SELECT =================
+# ================= SELECT MODEL =================
 def get_model(choice):
     if choice == "CNN":
         return cnn_model
@@ -122,9 +113,8 @@ def get_model(choice):
 
 model = get_model(model_choice)
 
-# ================= GEMINI FUNCTION =================
+# ================= GEMINI =================
 def gemini_interpretation(pred_class, confidence):
-
     prompt = f"""
 You are an agricultural AI expert.
 
@@ -137,13 +127,12 @@ Give:
 2. Possible cause
 3. Advice for farmers
 """
-
     response = model_ai.generate_content(prompt)
     return response.text
 
 # ================= TITLE =================
 st.title("🌿 Plant Disease Detection AI")
-st.caption("CNN + ResNet50 + Gemini AI (FYP Project)")
+st.caption("CNN + ResNet50 + Gemini AI (FYP System)")
 
 # ================= UPLOAD =================
 uploaded_file = st.file_uploader(
@@ -159,14 +148,14 @@ if uploaded_file:
     col1, col2 = st.columns(2)
 
     with col1:
-        st.image(image, caption="Uploaded Leaf", use_container_width=True)
+        st.image(image, caption="Uploaded Image", use_container_width=True)
 
     img_tensor = transform(image).unsqueeze(0)
 
     with st.spinner("🧠 AI analyzing..."):
         with torch.no_grad():
             output = model(img_tensor)
-            probs = torch.softmax(output, dim=1)[0].cpu().numpy()
+            probs = torch.softmax(output, dim=1)[0].numpy()
 
         pred_class = int(np.argmax(probs))
         confidence = float(probs[pred_class]) * 100
@@ -200,5 +189,5 @@ if uploaded_file:
         st.write(explanation)
 
     except Exception as e:
-        st.error("Gemini failed (API issue or quota).")
+        st.error("Gemini failed.")
         st.code(str(e))
