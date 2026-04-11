@@ -9,7 +9,7 @@ import google.generativeai as genai
 
 # ================= GEMINI SETUP =================
 # 🔐 PUT YOUR KEY HERE (DO NOT SHARE IT PUBLICLY)
-genai.configure(api_key="PASTE_YOUR_NEW_KEY_HERE")
+genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
 
 # ================= PAGE CONFIG =================
 st.set_page_config(
