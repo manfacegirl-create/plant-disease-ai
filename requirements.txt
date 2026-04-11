@@ -1,9 +1,7 @@
 streamlit
-torch==2.2.2
-torchvision==0.17.2
-pillow
 numpy
+pillow
 matplotlib
 plotly
-google-generativeai
 requests
+google-generativeai
