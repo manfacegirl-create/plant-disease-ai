@@ -15,37 +15,67 @@ st.set_page_config(
     layout="wide"
 )
 
-# ================= WHITE BACKGROUND FIX =================
+# ================= CLEAN WHITE UI (FIXED CONTRAST) =================
 st.markdown("""
 <style>
 
-/* FULL WHITE BACKGROUND */
+/* APP BACKGROUND */
 [data-testid="stAppViewContainer"] {
     background-color: #ffffff;
+    color: #111111;
 }
 
+/* HEADER */
 [data-testid="stHeader"] {
     background-color: #ffffff;
 }
 
+/* SIDEBAR */
 [data-testid="stSidebar"] {
-    background-color: #ffffff;
+    background-color: #f5f7fa;
 }
 
-/* TEXT COLOR */
+/* GLOBAL TEXT */
 html, body, [class*="css"] {
     color: #111111;
+    font-family: Arial;
 }
 
-/* CLEAN LAYOUT */
+/* MAIN CONTAINER */
 .block-container {
-    background-color: #ffffff;
     padding-top: 2rem;
+    padding-left: 2rem;
+    padding-right: 2rem;
 }
 
+/* CARD STYLE */
+.card {
+    background: #ffffff;
+    border-radius: 14px;
+    padding: 18px;
+    box-shadow: 0px 3px 12px rgba(0,0,0,0.08);
+    margin-bottom: 15px;
+    color: #111111;
+}
+
+/* TITLES */
 h1, h2, h3 {
     color: #111111;
-    font-family: Arial;
+}
+
+/* FILE UPLOADER */
+[data-testid="stFileUploader"] {
+    background-color: #ffffff;
+    border-radius: 10px;
+    padding: 10px;
+}
+
+/* BUTTONS */
+.stButton>button {
+    background-color: #16a34a;
+    color: white;
+    border-radius: 10px;
+    padding: 10px 20px;
 }
 
 </style>
@@ -64,11 +94,11 @@ try:
         GEMINI_OK = True
 
 except Exception as e:
-    st.warning(f"Gemini setup issue: {e}")
+    st.warning(f"Gemini setup error: {e}")
 
 # ================= TITLE =================
 st.title("🌿 Plant Disease Detection AI")
-st.caption("Clean White UI + CNN Model + Gemini AI")
+st.caption("Clean UI + CNN Model + Gemini AI Assistant")
 
 # ================= CLASSES =================
 classes = ["🍂 Diseased", "🌱 Healthy"]
@@ -121,10 +151,10 @@ Plant result:
 - Class: {classes[pred_class]}
 - Confidence: {confidence:.2f}%
 
-Give:
+Explain:
 1. Meaning
-2. Possible cause
-3. Simple farmer advice
+2. Cause
+3. Farmer advice (simple)
 """
 
     try:
@@ -148,8 +178,10 @@ if uploaded_file:
 
     # IMAGE
     with col1:
+        st.markdown('<div class="card">', unsafe_allow_html=True)
         st.subheader("📷 Uploaded Image")
         st.image(image, use_container_width=True)
+        st.markdown('</div>', unsafe_allow_html=True)
 
     img_tensor = transform(image).unsqueeze(0)
 
@@ -164,7 +196,8 @@ if uploaded_file:
 
     # RESULT
     with col2:
-        st.subheader("📊 Result")
+        st.markdown('<div class="card">', unsafe_allow_html=True)
+        st.subheader("📊 Prediction Result")
 
         if pred_class == 0:
             st.error(f"🍂 Diseased ({confidence:.2f}%)")
@@ -180,19 +213,23 @@ if uploaded_file:
         )
         st.plotly_chart(fig, use_container_width=True)
 
-        # DEBUG INFO
-        st.write("Raw probabilities:", probs)
-
-        # RISK LEVEL (NEW FEATURE)
         risk = "LOW 🌱" if pred_class == 1 else "HIGH ⚠️"
         st.info(f"AI Risk Level: {risk}")
 
-    # GEMINI
-    st.markdown("---")
-    st.subheader("🧠 AI Doctor Insight")
+        st.markdown('</div>', unsafe_allow_html=True)
 
-    advice = gemini_interpretation(pred_class, confidence)
-    st.write(advice)
+    # GEMINI SECTION
+    st.markdown("---")
+    st.subheader("🧠 AI Plant Doctor Insight")
+
+    with st.spinner("Generating advice..."):
+        advice = gemini_interpretation(pred_class, confidence)
+
+    st.markdown(f"""
+    <div class="card">
+    {advice}
+    </div>
+    """, unsafe_allow_html=True)
 
 else:
-    st.info("👆 Upload a leaf image to start analysis")
+    st.info("👆 Upload a plant leaf image to start analysis")
