@@ -2,11 +2,14 @@
 import streamlit as st
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from torchvision import transforms
 from PIL import Image
 import numpy as np
 import plotly.express as px
+import pandas as pd
 import google.generativeai as genai
+import io
 
 # ================= PAGE CONFIG =================
 st.set_page_config(
@@ -15,12 +18,11 @@ st.set_page_config(
     layout="wide"
 )
 
-# ================= CLEAN MODERN UI =================
+# ================= FUTURISTIC UI =================
 st.markdown("""
 <style>
-
 [data-testid="stAppViewContainer"] {
-    background: linear-gradient(135deg, #0b0f1a, #050816);
+    background: radial-gradient(circle at top, #0b0f1a, #050816);
     color: white;
 }
 
@@ -38,7 +40,7 @@ h1, h2, h3 {
     border: 1px solid rgba(125,211,252,0.25);
     border-radius: 16px;
     padding: 16px;
-    backdrop-filter: blur(10px);
+    backdrop-filter: blur(12px);
     margin-bottom: 12px;
 }
 
@@ -48,14 +50,6 @@ h1, h2, h3 {
     border-radius: 10px;
     border: none;
 }
-
-[data-testid="stFileUploader"] {
-    border: 1px dashed #3b82f6;
-    padding: 12px;
-    border-radius: 10px;
-    background: rgba(255,255,255,0.03);
-}
-
 </style>
 """, unsafe_allow_html=True)
 
@@ -68,8 +62,8 @@ except:
     GEMINI_OK = False
 
 # ================= TITLE =================
-st.title("🧠 LeftSentry AI Dashboard")
-st.caption("CNN Plant Disease Detection System")
+st.title("🌿 LeafSentry AI Pro")
+st.caption("Next-Gen Plant Disease Intelligence System")
 
 # ================= CLASSES =================
 classes = ["Diseased", "Healthy"]
@@ -86,7 +80,7 @@ transform = transforms.Compose([
 class CNN(nn.Module):
     def __init__(self):
         super().__init__()
-        self.net = nn.Sequential(
+        self.features = nn.Sequential(
             nn.Conv2d(3, 32, 3, padding=1),
             nn.ReLU(),
             nn.MaxPool2d(2),
@@ -103,7 +97,7 @@ class CNN(nn.Module):
         self.fc = nn.Linear(128, 2)
 
     def forward(self, x):
-        x = self.net(x)
+        x = self.features(x)
         x = x.view(x.size(0), -1)
         return self.fc(x)
 
@@ -117,27 +111,75 @@ def load_model():
 
 model = load_model()
 
+# ================= FALLBACK KNOWLEDGE BASE =================
+disease_info = {
+    "Diseased": {
+        "meaning": "Plant shows signs of infection or stress.",
+        "cause": "Fungal, bacterial, or environmental stress.",
+        "advice": "Remove infected leaves, apply treatment, improve airflow."
+    },
+    "Healthy": {
+        "meaning": "Plant is in good condition.",
+        "cause": "No disease detected.",
+        "advice": "Maintain sunlight, watering, and soil quality."
+    }
+}
+
+# ================= GRAD-CAM =================
+def generate_gradcam(model, image_tensor):
+    image_tensor.requires_grad = True
+
+    output = model(image_tensor)
+    pred = output.argmax(dim=1)
+
+    output[0, pred].backward()
+
+    gradients = image_tensor.grad.data
+    pooled_gradients = torch.mean(gradients, dim=[0, 2, 3])
+
+    activation = image_tensor.detach()
+
+    for i in range(activation.shape[1]):
+        activation[:, i, :, :] *= pooled_gradients[i]
+
+    heatmap = torch.mean(activation, dim=1).squeeze()
+    heatmap = np.maximum(heatmap, 0)
+    heatmap /= torch.max(heatmap)
+
+    return heatmap.numpy()
+
 # ================= GEMINI =================
 def gemini_advice(pred, conf):
-
     if not GEMINI_OK:
-        return "⚠️ Gemini not configured."
+        info = disease_info[classes[pred]]
+        return f"""
+🔍 Offline AI Insight:
+
+Meaning: {info['meaning']}
+Cause: {info['cause']}
+Advice: {info['advice']}
+"""
 
     try:
         prompt = f"""
 A plant leaf is classified as {classes[pred]} with confidence {conf:.2f}%.
 Give:
-1. Meaning
-2. Cause
-3. Advice
+- Meaning
+- Cause
+- Treatment advice
 """
         return model_ai.generate_content(prompt).text
-    except Exception as e:
-        return f"Error: {str(e)}"
+    except:
+        return "AI temporarily unavailable."
 
-# ================= SESSION HISTORY =================
+# ================= SESSION STATE =================
 if "history" not in st.session_state:
     st.session_state.history = []
+
+# ================= SIDEBAR =================
+st.sidebar.title("⚙️ Control Panel")
+show_gradcam = st.sidebar.toggle("Show Grad-CAM", True)
+show_chat = st.sidebar.toggle("AI Chat Mode", False)
 
 # ================= UPLOAD =================
 uploaded_file = st.file_uploader("Upload Leaf Image", type=["jpg", "png", "jpeg"])
@@ -157,8 +199,8 @@ if uploaded_file:
 
     img_tensor = transform(image).unsqueeze(0)
 
-    # PREDICTION
-    with st.spinner("Analyzing..."):
+    # PREDICT
+    with st.spinner("Analyzing plant health..."):
         with torch.no_grad():
             output = model(img_tensor)
             probs = torch.softmax(output, dim=1)[0].numpy()
@@ -166,53 +208,76 @@ if uploaded_file:
         pred = int(np.argmax(probs))
         conf = float(probs[pred]) * 100
 
-    # SAVE HISTORY
+    # HISTORY
     st.session_state.history.append({
         "Result": classes[pred],
         "Confidence": round(conf, 2)
     })
 
-    # RESULT PANEL
+    # RESULT
     with col2:
         st.markdown('<div class="card">', unsafe_allow_html=True)
-        st.subheader("Prediction Result")
+        st.subheader("Prediction")
 
         if pred == 0 and conf > 70:
-            st.error("⚠️ HIGH RISK DISEASE")
+            st.error("🚨 High Disease Risk")
         elif pred == 0:
-            st.warning("Possible Disease")
+            st.warning("Possible Disease Detected")
         else:
             st.success("Healthy Plant 🌱")
 
-        st.progress(min(int(conf), 100))
+        st.progress(int(conf))
 
         fig = px.bar(
             x=classes,
             y=probs * 100,
-            labels={"x": "Class", "y": "Confidence (%)"}
+            labels={"x": "Class", "y": "Confidence"}
         )
-
         st.plotly_chart(fig, use_container_width=True)
 
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # ================= GEMINI =================
-    st.divider()
-    st.subheader("🧠 AI Insight")
+    # ================= GRAD-CAM =================
+    if show_gradcam:
+        st.subheader("🔥 Model Attention (Grad-CAM)")
+        heatmap = generate_gradcam(model, img_tensor)
 
+        st.image(heatmap, caption="Where AI is looking", clamp=True)
+
+    # ================= AI INSIGHT =================
+    st.subheader("🧠 AI Diagnosis Report")
     st.write(gemini_advice(pred, conf))
+
+    # ================= CHAT MODE =================
+    if show_chat:
+        st.subheader("💬 Ask AI About This Plant")
+
+        user_q = st.text_input("Ask a question (e.g. How to cure it?)")
+
+        if user_q:
+            try:
+                response = model_ai.generate_content(
+                    f"Plant status: {classes[pred]} ({conf:.2f}%). Question: {user_q}"
+                )
+                st.info(response.text)
+            except:
+                st.error("Chat AI unavailable")
 
 # ================= HISTORY =================
 st.divider()
 st.subheader("📊 Prediction History")
 
-if len(st.session_state.history) > 0:
-    st.dataframe(st.session_state.history)
+if st.session_state.history:
+    df = pd.DataFrame(st.session_state.history)
+    st.dataframe(df)
+
+    csv = df.to_csv(index=False).encode('utf-8')
+    st.download_button("⬇ Download Report", csv, "leaf_history.csv", "text/csv")
 else:
     st.info("No predictions yet.")
 
-# ================= SIDEBAR =================
-st.sidebar.title("System Status")
-st.sidebar.write("✔ CNN Model Loaded")
-st.sidebar.write("✔ UI Stable Version")
-st.sidebar.write("✔ Gemini Enabled" if GEMINI_OK else "❌ Gemini OFF")
+# ================= SIDEBAR STATUS =================
+st.sidebar.markdown("### System Status")
+st.sidebar.success("CNN Model Loaded")
+st.sidebar.success("UI Pro Mode Active")
+st.sidebar.success("Gemini Enabled" if GEMINI_OK else "Offline Mode")
