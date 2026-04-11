@@ -6,23 +6,30 @@ from torchvision import transforms
 from PIL import Image
 import numpy as np
 import plotly.express as px
+
+# NOTE: Gemini removed visually (to make it look non-AI heavy)
 import google.generativeai as genai
 
 # ================= PAGE CONFIG =================
 st.set_page_config(
-    page_title="Plant Disease AI",
+    page_title="Plant Health Analyzer",
     page_icon="🌿",
     layout="wide"
 )
 
-# ================= CLEAN WHITE UI (FIXED CONTRAST) =================
+# ================= BLACK & WHITE PROFESSIONAL THEME =================
 st.markdown("""
 <style>
 
-/* APP BACKGROUND */
+/* MAIN BACKGROUND (BLACK & WHITE CLEAN) */
 [data-testid="stAppViewContainer"] {
     background-color: #ffffff;
-    color: #111111;
+    color: #000000;
+}
+
+/* SIDEBAR */
+[data-testid="stSidebar"] {
+    background-color: #f2f2f2;
 }
 
 /* HEADER */
@@ -30,78 +37,50 @@ st.markdown("""
     background-color: #ffffff;
 }
 
-/* SIDEBAR */
-[data-testid="stSidebar"] {
-    background-color: #f5f7fa;
-}
-
 /* GLOBAL TEXT */
 html, body, [class*="css"] {
-    color: #111111;
-    font-family: Arial;
+    color: #000000;
+    font-family: "Arial", sans-serif;
 }
 
-/* MAIN CONTAINER */
-.block-container {
-    padding-top: 2rem;
-    padding-left: 2rem;
-    padding-right: 2rem;
-}
-
-/* CARD STYLE */
-.card {
-    background: #ffffff;
-    border-radius: 14px;
-    padding: 18px;
-    box-shadow: 0px 3px 12px rgba(0,0,0,0.08);
-    margin-bottom: 15px;
-    color: #111111;
-}
-
-/* TITLES */
+/* REMOVE AI LOOK */
 h1, h2, h3 {
-    color: #111111;
+    color: #000000;
+    font-weight: 600;
 }
 
-/* FILE UPLOADER */
-[data-testid="stFileUploader"] {
+/* IMAGE / RESULT CARDS */
+.card {
     background-color: #ffffff;
+    border: 1px solid #e0e0e0;
     border-radius: 10px;
-    padding: 10px;
+    padding: 15px;
+    margin-bottom: 15px;
 }
 
-/* BUTTONS */
+/* BUTTON STYLE (MONOCHROME) */
 .stButton>button {
-    background-color: #16a34a;
-    color: white;
-    border-radius: 10px;
-    padding: 10px 20px;
+    background-color: #000000;
+    color: #ffffff;
+    border-radius: 6px;
+    padding: 8px 16px;
+    border: none;
+}
+
+/* PROGRESS BAR */
+.stProgress > div > div > div > div {
+    background-color: #000000;
 }
 
 </style>
 """, unsafe_allow_html=True)
 
-# ================= GEMINI SETUP =================
-GEMINI_OK = False
-model_ai = None
-
-try:
-    api_key = st.secrets.get("GEMINI_API_KEY", None)
-
-    if api_key:
-        genai.configure(api_key=api_key)
-        model_ai = genai.GenerativeModel("gemini-1.5-flash")
-        GEMINI_OK = True
-
-except Exception as e:
-    st.warning(f"Gemini setup error: {e}")
-
 # ================= TITLE =================
-st.title("🌿 Plant Disease Detection AI")
-st.caption("Clean UI + CNN Model + Gemini AI Assistant")
+st.title("Plant Health Analyzer")
+st.caption("Leaf Image Classification System")
 
 # ================= CLASSES =================
-classes = ["🍂 Diseased", "🌱 Healthy"]
+classes = ["Diseased", "Healthy"]
 
 # ================= TRANSFORM =================
 transform = transforms.Compose([
@@ -138,34 +117,9 @@ def load_model():
 
 model = load_model()
 
-# ================= GEMINI FUNCTION =================
-def gemini_interpretation(pred_class, confidence):
-
-    if not GEMINI_OK or model_ai is None:
-        return "⚠️ Gemini is not connected. Please check API key."
-
-    prompt = f"""
-You are an agricultural AI expert.
-
-Plant result:
-- Class: {classes[pred_class]}
-- Confidence: {confidence:.2f}%
-
-Explain:
-1. Meaning
-2. Cause
-3. Farmer advice (simple)
-"""
-
-    try:
-        response = model_ai.generate_content(prompt)
-        return response.text
-    except Exception as e:
-        return f"Gemini error: {str(e)}"
-
 # ================= UPLOAD =================
 uploaded_file = st.file_uploader(
-    "📤 Upload Plant Leaf Image",
+    "Upload Image",
     type=["jpg", "png", "jpeg"]
 )
 
@@ -179,14 +133,14 @@ if uploaded_file:
     # IMAGE
     with col1:
         st.markdown('<div class="card">', unsafe_allow_html=True)
-        st.subheader("📷 Uploaded Image")
+        st.subheader("Input Image")
         st.image(image, use_container_width=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
     img_tensor = transform(image).unsqueeze(0)
 
     # PREDICT
-    with st.spinner("🔍 AI analyzing plant..."):
+    with st.spinner("Processing image..."):
         with torch.no_grad():
             output = model(img_tensor)
             probs = torch.softmax(output, dim=1)[0].numpy()
@@ -197,39 +151,27 @@ if uploaded_file:
     # RESULT
     with col2:
         st.markdown('<div class="card">', unsafe_allow_html=True)
-        st.subheader("📊 Prediction Result")
+        st.subheader("Result")
 
         if pred_class == 0:
-            st.error(f"🍂 Diseased ({confidence:.2f}%)")
+            st.error(f"Diseased ({confidence:.2f}%)")
         else:
-            st.success(f"🌱 Healthy ({confidence:.2f}%)")
+            st.success(f"Healthy ({confidence:.2f}%)")
 
         st.progress(int(confidence))
 
         fig = px.bar(
             x=classes,
             y=probs * 100,
-            labels={"x": "Class", "y": "Confidence (%)"}
+            labels={"x": "Class", "y": "Confidence"}
         )
         st.plotly_chart(fig, use_container_width=True)
 
-        risk = "LOW 🌱" if pred_class == 1 else "HIGH ⚠️"
-        st.info(f"AI Risk Level: {risk}")
+        # SIMPLE STATUS (NO AI STYLE)
+        status = "LOW RISK" if pred_class == 1 else "HIGH RISK"
+        st.info(f"Status: {status}")
 
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # GEMINI SECTION
-    st.markdown("---")
-    st.subheader("🧠 AI Plant Doctor Insight")
-
-    with st.spinner("Generating advice..."):
-        advice = gemini_interpretation(pred_class, confidence)
-
-    st.markdown(f"""
-    <div class="card">
-    {advice}
-    </div>
-    """, unsafe_allow_html=True)
-
 else:
-    st.info("👆 Upload a plant leaf image to start analysis")
+    st.info("Upload a plant leaf image to analyze.")
