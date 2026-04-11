@@ -5,6 +5,11 @@ from torchvision import transforms
 from PIL import Image
 import numpy as np
 import plotly.express as px
+import google.generativeai as genai
+
+# ================= GEMINI SETUP =================
+# 🔐 PUT YOUR KEY HERE (DO NOT SHARE IT PUBLICLY)
+genai.configure(api_key="PASTE_YOUR_NEW_KEY_HERE")
 
 # ================= PAGE CONFIG =================
 st.set_page_config(
@@ -56,9 +61,29 @@ transform = transforms.Compose([
 
 classes = ["🌱 Healthy", "🍂 Diseased"]
 
+# ================= GEMINI FUNCTION =================
+def gemini_interpretation(pred_class, confidence):
+    model_ai = genai.GenerativeModel("gemini-1.5-flash")
+
+    prompt = f"""
+You are an agricultural AI expert.
+
+A plant leaf was classified as:
+- Class: {classes[pred_class]}
+- Confidence: {confidence:.2f}%
+
+Give a short explanation for a farmer:
+1. Meaning
+2. Possible cause
+3. Advice
+"""
+
+    response = model_ai.generate_content(prompt)
+    return response.text
+
 # ================= TITLE =================
 st.title("🌿 Plant Disease Detection AI")
-st.caption("Deep Learning CNN Model for Leaf Classification")
+st.caption("Deep Learning CNN Model + Gemini AI Interpretation")
 
 uploaded_file = st.file_uploader(
     "📤 Upload a leaf image (JPG, PNG, JPEG)",
@@ -75,7 +100,6 @@ if uploaded_file:
     with col1:
         st.image(image, caption="Uploaded Leaf Image", use_container_width=True)
 
-    # preprocessing
     img_tensor = transform(image).unsqueeze(0)
 
     with st.spinner("🧠 AI is analyzing the leaf..."):
@@ -86,7 +110,7 @@ if uploaded_file:
         pred_class = np.argmax(probs)
         confidence = probs[pred_class] * 100
 
-    # ================= RESULT PANEL =================
+    # ================= RESULT =================
     with col2:
         st.subheader("📊 Prediction Result")
 
@@ -97,8 +121,6 @@ if uploaded_file:
 
         st.progress(int(confidence))
 
-        st.markdown("### Confidence Breakdown")
-
         fig = px.bar(
             x=classes,
             y=probs * 100,
@@ -107,11 +129,11 @@ if uploaded_file:
         )
         st.plotly_chart(fig, use_container_width=True)
 
-    # ================= EXTRA INFO =================
+    # ================= GEMINI AI =================
     st.divider()
+    st.subheader("🧠 Gemini AI Interpretation")
 
-    st.subheader("🧠 AI Interpretation")
-    if pred_class == 1:
-        st.warning("The model detected possible disease symptoms in the leaf image.")
-    else:
-        st.info("The leaf appears healthy with no strong disease indicators.")
+    with st.spinner("🤖 Gemini is thinking..."):
+        explanation = gemini_interpretation(pred_class, confidence)
+
+    st.write(explanation)
