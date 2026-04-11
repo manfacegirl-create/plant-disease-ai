@@ -10,10 +10,71 @@ import google.generativeai as genai
 
 # ================= PAGE CONFIG =================
 st.set_page_config(
-    page_title="Plant Disease AI",
+    page_title="Plant AI System",
     page_icon="🌿",
     layout="wide"
 )
+
+# ================= CLEAN WHITE BRUTALIST UI =================
+st.markdown("""
+<style>
+
+/* BACKGROUND */
+[data-testid="stAppViewContainer"] {
+    background-color: #ffffff;
+    color: #000000;
+}
+
+/* SIDEBAR */
+[data-testid="stSidebar"] {
+    background-color: #f5f5f5;
+    border-right: 2px solid #000000;
+}
+
+/* TEXT */
+html, body, [class*="css"] {
+    color: #000000 !important;
+    font-family: "Arial", sans-serif;
+}
+
+/* HEADINGS */
+h1, h2, h3 {
+    color: #000000 !important;
+    font-weight: 700;
+}
+
+/* CARDS */
+.card {
+    background: #ffffff;
+    border: 2px solid #000000;
+    padding: 15px;
+    border-radius: 0px;
+    margin-bottom: 15px;
+}
+
+/* BUTTONS */
+.stButton>button {
+    background-color: #000000;
+    color: #ffffff;
+    border-radius: 0px;
+    padding: 10px 18px;
+    font-weight: bold;
+}
+
+/* UPLOADER */
+[data-testid="stFileUploader"] {
+    border: 2px dashed #000000;
+    padding: 15px;
+    background-color: #ffffff;
+}
+
+/* PLOT */
+.js-plotly-plot {
+    background-color: #ffffff !important;
+}
+
+</style>
+""", unsafe_allow_html=True)
 
 # ================= GEMINI SETUP =================
 try:
@@ -23,21 +84,19 @@ try:
 except:
     GEMINI_OK = False
 
-# ================= SIDEBAR =================
-st.sidebar.title("🌿 Plant AI System")
-st.sidebar.info("CNN Model (Fixed Version)")
+# ================= TITLE =================
+st.title("Plant AI System Dashboard")
+st.caption("CNN Classifier + AI Prompt Generator Tools")
 
-# ⚠️ FIXED CLASS ORDER (MATCH TRAINING)
-classes = ["🍂 Diseased", "🌱 Healthy"]
+# ================= CLASSES =================
+classes = ["Diseased", "Healthy"]
 
-# ================= TRANSFORM (FIXED) =================
+# ================= TRANSFORM =================
 transform = transforms.Compose([
     transforms.Resize((224, 224)),
     transforms.ToTensor(),
-    transforms.Normalize(
-        [0.485, 0.456, 0.406],
-        [0.229, 0.224, 0.225]
-    )
+    transforms.Normalize([0.485, 0.456, 0.406],
+                         [0.229, 0.224, 0.225])
 ])
 
 # ================= CNN MODEL =================
@@ -45,17 +104,9 @@ class CNN(nn.Module):
     def __init__(self):
         super().__init__()
         self.net = nn.Sequential(
-            nn.Conv2d(3, 32, 3, padding=1),
-            nn.ReLU(),
-            nn.MaxPool2d(2),
-
-            nn.Conv2d(32, 64, 3, padding=1),
-            nn.ReLU(),
-            nn.MaxPool2d(2),
-
-            nn.Conv2d(64, 128, 3, padding=1),
-            nn.ReLU(),
-
+            nn.Conv2d(3, 32, 3, padding=1), nn.ReLU(), nn.MaxPool2d(2),
+            nn.Conv2d(32, 64, 3, padding=1), nn.ReLU(), nn.MaxPool2d(2),
+            nn.Conv2d(64, 128, 3, padding=1), nn.ReLU(),
             nn.AdaptiveAvgPool2d(1)
         )
         self.fc = nn.Linear(128, 2)
@@ -65,7 +116,6 @@ class CNN(nn.Module):
         x = x.view(x.size(0), -1)
         return self.fc(x)
 
-# ================= LOAD MODEL =================
 @st.cache_resource
 def load_model():
     model = CNN()
@@ -76,41 +126,43 @@ def load_model():
 model = load_model()
 
 # ================= GEMINI FUNCTION =================
-def gemini_interpretation(pred_class, confidence):
+def gemini_advice(pred_class, confidence):
 
     if not GEMINI_OK:
-        return "⚠️ Gemini API not configured."
+        return "Gemini not configured."
 
     prompt = f"""
-You are an agricultural AI expert.
+A plant leaf was classified as {classes[pred_class]} with confidence {confidence:.2f}%.
+Give simple farmer advice.
+"""
+    try:
+        return model_ai.generate_content(prompt).text
+    except:
+        return "Gemini error."
 
-A plant leaf was classified as:
-- Class: {classes[pred_class]}
-- Confidence: {confidence:.2f}%
-
-Give:
-1. Meaning
-2. Possible cause
-3. Advice for farmers
+# ================= PROMPT GENERATORS =================
+def dashboard_prompt():
+    return """
+Generate a React/Tailwind component for my model performance dashboard.
+Use a sharp black & white brutalist UI style.
+Include cards, bold typography, and grid layout.
 """
 
-    try:
-        response = model_ai.generate_content(prompt)
-        return response.text
-    except Exception as e:
-        return f"⚠️ Gemini failed: {str(e)}"
+def confusion_matrix_prompt():
+    return """
+Show me a confusion matrix for my Random Forest model.
+Use grayscale heatmap with strong black text labels and clean scientific styling.
+"""
 
-# ================= TITLE =================
-st.title("🌿 Plant Disease Detection AI")
-st.caption("Fixed CNN Model + Gemini AI")
+def logo_prompt():
+    return """
+Describe a DALL-E prompt for a minimalist ML logo in black & white vector style.
+Make it modern, geometric, and clean.
+"""
 
-# ================= UPLOAD =================
-uploaded_file = st.file_uploader(
-    "📤 Upload a leaf image",
-    type=["jpg", "png", "jpeg"]
-)
+# ================= UI =================
+uploaded_file = st.file_uploader("Upload Leaf Image", type=["jpg","png","jpeg"])
 
-# ================= PREDICTION =================
 if uploaded_file:
 
     image = Image.open(uploaded_file).convert("RGB")
@@ -118,43 +170,61 @@ if uploaded_file:
     col1, col2 = st.columns(2)
 
     with col1:
-        st.image(image, caption="Uploaded Image", use_container_width=True)
+        st.markdown('<div class="card">', unsafe_allow_html=True)
+        st.subheader("Input Image")
+        st.image(image, use_container_width=True)
+        st.markdown('</div>', unsafe_allow_html=True)
 
     img_tensor = transform(image).unsqueeze(0)
 
-    with st.spinner("🧠 AI analyzing..."):
+    with st.spinner("Analyzing..."):
         with torch.no_grad():
             output = model(img_tensor)
             probs = torch.softmax(output, dim=1)[0].numpy()
 
-        pred_class = int(np.argmax(probs))
-        confidence = float(probs[pred_class]) * 100
+        pred = int(np.argmax(probs))
+        conf = float(probs[pred]) * 100
 
-    # ================= RESULT =================
     with col2:
-        st.subheader("📊 Prediction Result")
+        st.markdown('<div class="card">', unsafe_allow_html=True)
+        st.subheader("Prediction")
 
-        if pred_class == 0:
-            st.error(f"🍂 Diseased ({confidence:.2f}%)")
+        if pred == 0:
+            st.error(f"Diseased ({conf:.2f}%)")
         else:
-            st.success(f"🌱 Healthy ({confidence:.2f}%)")
+            st.success(f"Healthy ({conf:.2f}%)")
 
-        st.progress(int(confidence))
+        st.progress(int(conf))
 
         fig = px.bar(
             x=classes,
-            y=probs * 100,
-            labels={"x": "Class", "y": "Confidence (%)"}
+            y=probs*100,
+            labels={"x":"Class","y":"Confidence"}
         )
 
         st.plotly_chart(fig, use_container_width=True)
 
-        # DEBUG
-        st.write("Raw probabilities:", probs)
+        st.markdown('</div>', unsafe_allow_html=True)
 
-# ================= GEMINI =================
+    st.divider()
+
+    st.subheader("AI Advice")
+    st.write(gemini_advice(pred, conf))
+
+# ================= PROMPT TOOL SECTION =================
 st.divider()
-st.subheader("🧠 AI Advice")
+st.subheader("Prompt Generator Tools (ML Design Assistant)")
 
-explanation = gemini_interpretation(pred_class, confidence)
-st.write(explanation)
+colA, colB, colC = st.columns(3)
+
+with colA:
+    if st.button("Dashboard Prompt"):
+        st.code(dashboard_prompt(), language="text")
+
+with colB:
+    if st.button("Confusion Matrix Prompt"):
+        st.code(confusion_matrix_prompt(), language="text")
+
+with colC:
+    if st.button("ML Logo Prompt"):
+        st.code(logo_prompt(), language="text")
