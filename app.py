@@ -1,14 +1,7 @@
-import os
-
-# ================= FORCE INSTALL PYTORCH (STREAMLIT CLOUD FIX) =================
-
-
-# ================= IMPORTS =================
 import streamlit as st
 import torch
 import torch.nn as nn
 from torchvision import transforms
-from torchvision.models import resnet50
 from PIL import Image
 import numpy as np
 import plotly.express as px
@@ -27,13 +20,7 @@ model_ai = genai.GenerativeModel("gemini-1.5-flash")
 
 # ================= SIDEBAR =================
 st.sidebar.title("🌿 Plant AI System")
-
-model_choice = st.sidebar.selectbox(
-    "Choose Model",
-    ["CNN", "ResNet50", "Auto (Best)"]
-)
-
-st.sidebar.info("Upload a leaf image and get prediction.")
+st.sidebar.info("CNN Model Only (Stable Version)")
 
 classes = ["🌱 Healthy", "🍂 Diseased"]
 
@@ -60,58 +47,15 @@ class CNN(nn.Module):
         x = x.view(x.size(0), -1)
         return self.fc(x)
 
-# ================= RESNET MODEL =================
-class ResNetModel(nn.Module):
-    def __init__(self):
-        super().__init__()
-        self.model = resnet50(weights=None)
-        self.model.fc = nn.Linear(self.model.fc.in_features, 2)
-
-    def forward(self, x):
-        return self.model(x)
-
-# ================= DOWNLOAD RESNET FROM DRIVE =================
-def download_resnet():
-    url = "https://drive.google.com/uc?export=download&id=1D53PoSyh3aze-EobeTpHcBJobB38xyAS"
-    path = "resnet.pth"
-
-    if not os.path.exists(path):
-        with st.spinner("Downloading ResNet model..."):
-            import requests
-            r = requests.get(url)
-            with open(path, "wb") as f:
-                f.write(r.content)
-
-    return path
-
-# ================= LOAD MODELS =================
+# ================= LOAD CNN MODEL =================
 @st.cache_resource
-def load_models():
-    # CNN
-    cnn = CNN()
-    cnn.load_state_dict(torch.load("cnn.pth", map_location="cpu"))
-    cnn.eval()
+def load_model():
+    model = CNN()
+    model.load_state_dict(torch.load("cnn.pth", map_location="cpu"))
+    model.eval()
+    return model
 
-    # ResNet
-    resnet = ResNetModel()
-    resnet_path = download_resnet()
-    resnet.load_state_dict(torch.load(resnet_path, map_location="cpu"))
-    resnet.eval()
-
-    return cnn, resnet
-
-cnn_model, resnet_model = load_models()
-
-# ================= SELECT MODEL =================
-def get_model(choice):
-    if choice == "CNN":
-        return cnn_model
-    elif choice == "ResNet50":
-        return resnet_model
-    else:
-        return cnn_model
-
-model = get_model(model_choice)
+model = load_model()
 
 # ================= GEMINI =================
 def gemini_interpretation(pred_class, confidence):
@@ -132,7 +76,7 @@ Give:
 
 # ================= TITLE =================
 st.title("🌿 Plant Disease Detection AI")
-st.caption("CNN + ResNet50 + Gemini AI (FYP System)")
+st.caption("CNN Model + Gemini AI (Stable Deployment Version)")
 
 # ================= UPLOAD =================
 uploaded_file = st.file_uploader(
