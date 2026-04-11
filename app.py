@@ -90,7 +90,8 @@ def load_models():
     # ResNet (download if needed)
     resnet = ResNetModel()
     resnet_path = download_resnet()
-    resnet.load_state_dict(torch.load(resnet_path, map_location="cpu"))
+    resnet_state = torch.load(resnet_path, map_location="cpu", weights_only=False)
+    resnet.load_state_dict(resnet_state)
     resnet.eval()
 
     return cnn, resnet
