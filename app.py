@@ -122,8 +122,8 @@ def init_gemini():
 
         # FIXED: only working models
         models_to_try = [
-            "gemini-3.0-flash",
-            "gemini-3.0-pro"
+            "gemini-3-flash",
+            "gemini-3-pro"
         ]
 
         for m in models_to_try:
