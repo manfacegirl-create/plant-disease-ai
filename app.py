@@ -1,4 +1,5 @@
 # ================= IMPORTS =================
+from auth import auth_page, check_auth, logout
 import streamlit as st
 import torch
 import torch.nn as nn
@@ -20,6 +21,10 @@ st.set_page_config(
     page_icon="🌿",
     layout="wide"
 )
+
+if not check_auth():
+    auth_page()
+    st.stop()
 
 # ================= UI (MUST BE FIRST) =================
 st.title("🌿 LeafSentry AI")
@@ -122,8 +127,8 @@ def init_gemini():
 
         # FIXED: only working models
         models_to_try = [
-            "gemini-3-flash",
-            "gemini-3-pro"
+            "gemini-3.0-flash",
+            "gemini-3.0-pro"
         ]
 
         for m in models_to_try:
@@ -269,3 +274,7 @@ else:
     st.sidebar.warning(GEMINI_ERROR)
 
 st.sidebar.info("Stable Production Build")
+
+st.sidebar.write(f"👤 {st.session_state.user}")
+if st.sidebar.button("Logout"):
+    logout()
