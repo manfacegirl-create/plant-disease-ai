@@ -64,8 +64,6 @@ def logout():
 
 # ================= UI =================
 def auth_page():
-    st.set_page_config(page_title="LeafSentry Access", layout="wide")
-
     st.markdown("""
     <style>
     .stApp {
@@ -84,54 +82,52 @@ def auth_page():
     """, unsafe_allow_html=True)
 
     st.markdown('<div class="card">', unsafe_allow_html=True)
-
     st.markdown("## 🔐 LeafSentry Access")
 
     tab1, tab2, tab3 = st.tabs(["Login", "Sign Up", "Forgot Password"])
 
-    # LOGIN
+    # ===== LOGIN =====
     with tab1:
-        user = st.text_input("Username")
-        pw = st.text_input("Password", type="password")
+        u = st.text_input("Username", key="login_user")
+        p = st.text_input("Password", type="password", key="login_pass")
 
-        if st.button("Login"):
-            if login_user(user, pw):
+        if st.button("Login", key="login_btn"):
+            if login_user(u, p):
                 st.session_state.logged_in = True
-                st.session_state.user = user
-                st.success("Access Granted 🚀")
+                st.session_state.user = u
                 st.rerun()
             else:
                 st.error("Invalid credentials")
 
-    # SIGNUP
+    # ===== SIGNUP =====
     with tab2:
-        new_user = st.text_input("New Username")
-        new_pw = st.text_input("New Password", type="password")
+        u = st.text_input("New Username", key="signup_user")
+        p = st.text_input("New Password", type="password", key="signup_pass")
 
-        if st.button("Create Account"):
-            if not strong_password(new_pw):
+        if st.button("Create Account", key="signup_btn"):
+            if not strong_password(p):
                 st.warning("Weak password")
             else:
-                if signup_user(new_user, new_pw):
-                    st.success("Account created!")
+                if signup_user(u, p):
+                    st.success("Account created")
                 else:
                     st.error("Username exists")
 
-    # FORGOT PASSWORD
+    # ===== RESET =====
     with tab3:
-        user = st.text_input("Username")
-        new_pw = st.text_input("New Password", type="password")
+        u = st.text_input("Username", key="reset_user")
+        p = st.text_input("New Password", type="password", key="reset_pass")
 
-        if st.button("Reset Password"):
-            if not strong_password(new_pw):
+        if st.button("Reset Password", key="reset_btn"):
+            if not strong_password(p):
                 st.warning("Weak password")
             else:
-                c.execute("SELECT * FROM users WHERE username=?", (user,))
+                c.execute("SELECT * FROM users WHERE username=?", (u,))
                 if c.fetchone():
-                    new_hash = hash_password(new_pw)
-                    c.execute("UPDATE users SET password=? WHERE username=?", (new_hash, user))
+                    new_hash = hash_password(p)
+                    c.execute("UPDATE users SET password=? WHERE username=?", (new_hash, u))
                     conn.commit()
-                    st.success("Password reset successful")
+                    st.success("Password updated")
                 else:
                     st.error("User not found")
 
