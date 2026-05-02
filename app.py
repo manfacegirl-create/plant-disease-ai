@@ -40,7 +40,7 @@ def check_password(pw, hashed):
     return bcrypt.checkpw(pw.encode(), hashed)
 
 def strong_password(pw):
-    return len(pw) >= 6 and any(c.isdigit() for c in pw) and any(c.isalpha() for c in pw)
+    return len(pw) >= 6 and any(x.isdigit() for x in pw) and any(x.isalpha() for x in pw)
 
 # ================= AUTH =================
 def signup(u, p):
@@ -73,13 +73,11 @@ st.markdown("""
     color: #e0f2fe;
 }
 
-/* Neon glow titles */
 h1, h2, h3 {
     color: #38bdf8 !important;
     text-shadow: 0 0 10px #38bdf8;
 }
 
-/* Glass card */
 .card {
     background: rgba(255,255,255,0.05);
     border: 1px solid rgba(56,189,248,0.3);
@@ -88,20 +86,12 @@ h1, h2, h3 {
     box-shadow: 0 0 20px rgba(56,189,248,0.2);
 }
 
-/* Buttons */
 .stButton>button {
     background: linear-gradient(90deg, #0ea5e9, #38bdf8);
     color: white;
     border-radius: 12px;
     border: none;
     box-shadow: 0 0 10px #38bdf8;
-}
-
-/* Inputs */
-input {
-    background-color: #020617 !important;
-    color: #38bdf8 !important;
-    border-radius: 10px !important;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -113,12 +103,11 @@ def auth_page():
 
     tab1, tab2, tab3 = st.tabs(["Login", "Sign Up", "Reset"])
 
-    # LOGIN
     with tab1:
         u = st.text_input("Username", key="login_user")
         p = st.text_input("Password", type="password", key="login_pass")
 
-        if st.button("Login", key="login_btn"):
+        if st.button("Login"):
             if login(u, p):
                 st.session_state.logged_in = True
                 st.session_state.user = u
@@ -126,12 +115,11 @@ def auth_page():
             else:
                 st.error("Invalid credentials")
 
-    # SIGN UP
     with tab2:
         u = st.text_input("New Username", key="signup_user")
         p = st.text_input("New Password", type="password", key="signup_pass")
 
-        if st.button("Create Account", key="signup_btn"):
+        if st.button("Create Account"):
             if not strong_password(p):
                 st.warning("Weak password")
             elif signup(u, p):
@@ -139,15 +127,12 @@ def auth_page():
             else:
                 st.error("Username exists")
 
-    # RESET
     with tab3:
         u = st.text_input("Username", key="reset_user")
         p = st.text_input("New Password", type="password", key="reset_pass")
 
-        if st.button("Reset Password", key="reset_btn"):
-            if not strong_password(p):
-                st.warning("Weak password")
-            else:
+        if st.button("Reset Password"):
+            if strong_password(p):
                 c.execute("SELECT * FROM users WHERE username=?", (u,))
                 if c.fetchone():
                     c.execute("UPDATE users SET password=? WHERE username=?",
@@ -156,6 +141,8 @@ def auth_page():
                     st.success("Password updated")
                 else:
                     st.error("User not found")
+            else:
+                st.warning("Weak password")
 
     st.markdown('</div>', unsafe_allow_html=True)
 
@@ -164,7 +151,7 @@ if not check_auth():
     auth_page()
     st.stop()
 
-# ================= MAIN APP =================
+# ================= MAIN =================
 st.title("🌿 LeafSentry AI")
 st.caption("Neural Plant Disease Detection")
 
@@ -210,39 +197,36 @@ def load_model():
 model = load_model()
 
 # ================= GEMINI =================
-GEMINI_OK = False
-client = None
-
-if GEMINI_AVAILABLE:
-    try:
-        key = st.secrets.get("GEMINI_API_KEY")
-        if key:
-            client = genai.Client(api_key=key)
-            GEMINI_OK = True
-    except:
-        pass
-
 def ai_advice(pred, conf):
-    if not GEMINI_OK:
-        return "Basic care: monitor plant, water properly."
+    if not GEMINI_AVAILABLE:
+        return "Basic care: ensure proper watering, sunlight, and remove infected leaves."
 
-    prompt = f"Plant is {classes[pred]} ({conf:.2f}%). Give treatment."
     try:
-        r = client.models.generate_content(
+        client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
+
+        prompt = f"""
+        A plant is classified as {classes[pred]} with {conf:.2f}% confidence.
+        Give:
+        1. Diagnosis explanation
+        2. Treatment steps
+        3. Prevention tips
+        """
+
+        response = client.models.generate_content(
             model="gemini-1.5-flash",
             contents=prompt
         )
-        return r.text
+
+        return response.text
+
     except:
-        return "AI unavailable."
+        return "AI advice unavailable (check API key)."
 
 # ================= UPLOAD =================
-file = st.file_uploader("Upload Leaf Image", type=["jpg","png"])
+file = st.file_uploader("Upload Leaf Image", type=["jpg", "png"])
 
 if file:
     img = Image.open(file)
-    st.image(img, use_container_width=True)
-
     x = transform(img).unsqueeze(0)
 
     if model:
@@ -254,10 +238,23 @@ if file:
     pred = int(np.argmax(probs))
     conf = float(probs[pred]) * 100
 
-    st.subheader(f"{classes[pred]} ({conf:.2f}%)")
-    st.progress(int(conf))
+    # ================= SIDE BY SIDE UI =================
+    col1, col2 = st.columns(2)
 
-    st.plotly_chart(px.bar(x=classes, y=probs*100), use_container_width=True)
+    with col1:
+        st.image(img, caption="Uploaded Leaf", use_container_width=True)
+        st.subheader(f"Prediction: {classes[pred]}")
+        st.progress(int(conf))
 
-    st.subheader("🧠 AI Diagnosis")
+    with col2:
+        df = pd.DataFrame({
+            "Class": classes,
+            "Confidence": probs * 100
+        })
+
+        fig = px.bar(df, x="Class", y="Confidence", title="Prediction Confidence")
+        st.plotly_chart(fig, use_container_width=True)
+
+    # ================= GEMINI =================
+    st.markdown("## 🧠 Gemini AI Diagnosis")
     st.write(ai_advice(pred, conf))
