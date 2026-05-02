@@ -1,150 +1,138 @@
+import streamlit as st
+import sqlite3
+import bcrypt
+
+# ================= DATABASE =================
+def connect_db():
+    return sqlite3.connect("users.db", check_same_thread=False)
+
+conn = connect_db()
+c = conn.cursor()
+
+c.execute("""
+CREATE TABLE IF NOT EXISTS users (
+    username TEXT PRIMARY KEY,
+    password BLOB
+)
+""")
+conn.commit()
+
+# ================= PASSWORD =================
+def hash_password(password):
+    return bcrypt.hashpw(password.encode(), bcrypt.gensalt())
+
+def check_password(password, hashed):
+    return bcrypt.checkpw(password.encode(), hashed)
+
+# ================= VALIDATION =================
+def strong_password(password):
+    return (
+        len(password) >= 6 and
+        any(c.isdigit() for c in password) and
+        any(c.isalpha() for c in password)
+    )
+
+# ================= AUTH =================
+def signup_user(username, password):
+    try:
+        hashed = hash_password(password)
+        c.execute("INSERT INTO users VALUES (?, ?)", (username, hashed))
+        conn.commit()
+        return True
+    except:
+        return False
+
+def login_user(username, password):
+    c.execute("SELECT password FROM users WHERE username=?", (username,))
+    data = c.fetchone()
+
+    if data:
+        if check_password(password, data[0]):
+            return True
+    return False
+
+# ================= SESSION =================
+def check_auth():
+    if "logged_in" not in st.session_state:
+        st.session_state.logged_in = False
+    return st.session_state.logged_in
+
+def logout():
+    st.session_state.logged_in = False
+    st.session_state.user = None
+    st.rerun()
+
+# ================= UI =================
 def auth_page():
     st.set_page_config(page_title="LeafSentry Access", layout="wide")
 
-    # ===== STYLE =====
     st.markdown("""
     <style>
     .stApp {
         background: linear-gradient(135deg, #5f6dfc, #d946ef);
     }
-
-    .container {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        height: 100vh;
-    }
-
     .card {
         background: white;
         border-radius: 20px;
-        width: 900px;
-        height: 480px;
-        display: flex;
-        overflow: hidden;
-        box-shadow: 0 15px 40px rgba(0,0,0,0.25);
-    }
-
-    .left {
-        width: 45%;
-        background: #f3f4f6;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        padding: 20px;
-    }
-
-    .right {
-        width: 55%;
         padding: 40px;
+        max-width: 500px;
+        margin: auto;
+        margin-top: 80px;
+        box-shadow: 0 15px 40px rgba(0,0,0,0.2);
     }
-
-    .title {
-        font-size: 26px;
-        font-weight: bold;
-        margin-bottom: 15px;
-        color: #333;
-    }
-
-    .subtitle {
-        font-size: 14px;
-        color: gray;
-        margin-bottom: 20px;
-    }
-
-    .login-btn button {
-        background: #55b043;
-        color: white;
-        border-radius: 25px;
-        font-weight: bold;
-    }
-
-    .forgot {
-        font-size: 13px;
-        color: gray;
-        cursor: pointer;
-    }
-
     </style>
     """, unsafe_allow_html=True)
 
-    # ===== LAYOUT =====
-    st.markdown('<div class="container">', unsafe_allow_html=True)
     st.markdown('<div class="card">', unsafe_allow_html=True)
 
-    left, right = st.columns([1, 1.2])
+    st.markdown("## 🔐 LeafSentry Access")
 
-    # ===== LEFT =====
-    with left:
-        st.markdown('<div class="left">', unsafe_allow_html=True)
+    tab1, tab2, tab3 = st.tabs(["Login", "Sign Up", "Forgot Password"])
 
-        # 👉 replace with your real logo
-        st.image("https://via.placeholder.com/150", width=150)
+    # LOGIN
+    with tab1:
+        user = st.text_input("Username")
+        pw = st.text_input("Password", type="password")
 
-        st.markdown("<h2 style='color:#ec4899;'>LeafSentry</h2>", unsafe_allow_html=True)
-        st.markdown("<h1 style='color:#f97316;'>Access</h1>", unsafe_allow_html=True)
+        if st.button("Login"):
+            if login_user(user, pw):
+                st.session_state.logged_in = True
+                st.session_state.user = user
+                st.success("Access Granted 🚀")
+                st.rerun()
+            else:
+                st.error("Invalid credentials")
 
-        st.markdown('</div>', unsafe_allow_html=True)
+    # SIGNUP
+    with tab2:
+        new_user = st.text_input("New Username")
+        new_pw = st.text_input("New Password", type="password")
 
-    # ===== RIGHT =====
-    with right:
-        st.markdown('<div class="right">', unsafe_allow_html=True)
-
-        st.markdown('<div class="title">🔐 LeafSentry Access</div>', unsafe_allow_html=True)
-        st.markdown('<div class="subtitle">Secure login to your dashboard</div>', unsafe_allow_html=True)
-
-        tab1, tab2, tab3 = st.tabs(["Login", "Sign Up", "Forgot Password"])
-
-        # ===== LOGIN =====
-        with tab1:
-            username = st.text_input("Username", key="login_user")
-            password = st.text_input("Password", type="password", key="login_pass")
-
-            st.markdown("<div class='forgot'>Use 'Forgot Password' tab if needed</div>", unsafe_allow_html=True)
-
-            if st.button("LOGIN", use_container_width=True):
-                if login_user(username, password):
-                    st.session_state.logged_in = True
-                    st.session_state.user = username
-                    st.success("Access Granted 🚀")
-                    st.rerun()
+        if st.button("Create Account"):
+            if not strong_password(new_pw):
+                st.warning("Weak password")
+            else:
+                if signup_user(new_user, new_pw):
+                    st.success("Account created!")
                 else:
-                    st.error("Invalid username or password")
+                    st.error("Username exists")
 
-        # ===== SIGN UP =====
-        with tab2:
-            new_user = st.text_input("New Username", key="signup_user")
-            new_pass = st.text_input("New Password", type="password", key="signup_pass")
+    # FORGOT PASSWORD
+    with tab3:
+        user = st.text_input("Username")
+        new_pw = st.text_input("New Password", type="password")
 
-            if st.button("Create Account", use_container_width=True):
-                if not strong_password(new_pass):
-                    st.warning("Password must be at least 6 characters with letters and numbers")
+        if st.button("Reset Password"):
+            if not strong_password(new_pw):
+                st.warning("Weak password")
+            else:
+                c.execute("SELECT * FROM users WHERE username=?", (user,))
+                if c.fetchone():
+                    new_hash = hash_password(new_pw)
+                    c.execute("UPDATE users SET password=? WHERE username=?", (new_hash, user))
+                    conn.commit()
+                    st.success("Password reset successful")
                 else:
-                    if signup_user(new_user, new_pass):
-                        st.success("Account created! You can login now.")
-                    else:
-                        st.error("Username already exists")
+                    st.error("User not found")
 
-        # ===== FORGOT PASSWORD =====
-        with tab3:
-            reset_user = st.text_input("Enter Username", key="reset_user")
-            new_password = st.text_input("New Password", type="password", key="reset_pass")
-
-            if st.button("Reset Password", use_container_width=True):
-                if not strong_password(new_password):
-                    st.warning("Weak password")
-                else:
-                    c.execute("SELECT * FROM users WHERE username=?", (reset_user,))
-                    if c.fetchone():
-                        new_hash = hash_password(new_password)
-                        c.execute("UPDATE users SET password=? WHERE username=?", (new_hash, reset_user))
-                        conn.commit()
-                        st.success("Password updated successfully ✅")
-                    else:
-                        st.error("User not found")
-
-        st.markdown('</div>', unsafe_allow_html=True)
-
-    st.markdown('</div>', unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
