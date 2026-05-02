@@ -1,6 +1,7 @@
 # ================= IMPORTS =================
-from auth import auth_page, check_auth, logout
 import streamlit as st
+import sqlite3
+import bcrypt
 import torch
 import torch.nn as nn
 from torchvision import transforms
@@ -9,24 +10,146 @@ import numpy as np
 import plotly.express as px
 import pandas as pd
 
+# ================= GEMINI IMPORT =================
 try:
-    import google.generativeai as genai
+    from google import genai
     GEMINI_AVAILABLE = True
 except:
     GEMINI_AVAILABLE = False
 
 # ================= PAGE CONFIG =================
-st.set_page_config(
-    page_title="LeafSentry AI",
-    page_icon="🌿",
-    layout="wide"
-)
+st.set_page_config(page_title="LeafSentry AI", page_icon="🌿", layout="wide")
 
+# ================= DATABASE =================
+def connect_db():
+    return sqlite3.connect("users.db", check_same_thread=False)
+
+conn = connect_db()
+c = conn.cursor()
+
+c.execute("""
+CREATE TABLE IF NOT EXISTS users (
+    username TEXT PRIMARY KEY,
+    password BLOB
+)
+""")
+conn.commit()
+
+# ================= PASSWORD =================
+def hash_password(password):
+    return bcrypt.hashpw(password.encode(), bcrypt.gensalt())
+
+def check_password(password, hashed):
+    return bcrypt.checkpw(password.encode(), hashed)
+
+def strong_password(password):
+    return (
+        len(password) >= 6 and
+        any(c.isdigit() for c in password) and
+        any(c.isalpha() for c in password)
+    )
+
+# ================= AUTH =================
+def signup_user(username, password):
+    try:
+        hashed = hash_password(password)
+        c.execute("INSERT INTO users VALUES (?, ?)", (username, hashed))
+        conn.commit()
+        return True
+    except:
+        return False
+
+def login_user(username, password):
+    c.execute("SELECT password FROM users WHERE username=?", (username,))
+    data = c.fetchone()
+    if data:
+        return check_password(password, data[0])
+    return False
+
+def check_auth():
+    if "logged_in" not in st.session_state:
+        st.session_state.logged_in = False
+    return st.session_state.logged_in
+
+def logout():
+    st.session_state.logged_in = False
+    st.session_state.user = None
+    st.rerun()
+
+# ================= AUTH UI =================
+def auth_page():
+    st.markdown("""
+    <style>
+    .stApp {
+        background: linear-gradient(135deg, #5f6dfc, #d946ef);
+    }
+    .card {
+        background: white;
+        border-radius: 20px;
+        padding: 40px;
+        max-width: 500px;
+        margin: auto;
+        margin-top: 80px;
+        box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+    st.markdown('<div class="card">', unsafe_allow_html=True)
+    st.markdown("## 🔐 LeafSentry Access")
+
+    tab1, tab2, tab3 = st.tabs(["Login", "Sign Up", "Forgot Password"])
+
+    # LOGIN
+    with tab1:
+        u = st.text_input("Username")
+        p = st.text_input("Password", type="password")
+        if st.button("Login"):
+            if login_user(u, p):
+                st.session_state.logged_in = True
+                st.session_state.user = u
+                st.rerun()
+            else:
+                st.error("Invalid credentials")
+
+    # SIGNUP
+    with tab2:
+        u = st.text_input("New Username")
+        p = st.text_input("New Password", type="password")
+        if st.button("Create Account"):
+            if not strong_password(p):
+                st.warning("Weak password")
+            else:
+                if signup_user(u, p):
+                    st.success("Account created")
+                else:
+                    st.error("Username exists")
+
+    # RESET
+    with tab3:
+        u = st.text_input("Username")
+        p = st.text_input("New Password", type="password")
+        if st.button("Reset Password"):
+            if not strong_password(p):
+                st.warning("Weak password")
+            else:
+                c.execute("SELECT * FROM users WHERE username=?", (u,))
+                if c.fetchone():
+                    new_hash = hash_password(p)
+                    c.execute("UPDATE users SET password=? WHERE username=?", (new_hash, u))
+                    conn.commit()
+                    st.success("Password updated")
+                else:
+                    st.error("User not found")
+
+    st.markdown('</div>', unsafe_allow_html=True)
+
+# ================= AUTH CHECK =================
 if not check_auth():
     auth_page()
     st.stop()
 
-# ================= UI (MUST BE FIRST) =================
+# ================= UI =================
 st.title("🌿 LeafSentry AI")
 st.caption("CNN Plant Disease Detection System")
 
@@ -36,34 +159,17 @@ st.markdown("""
     background: radial-gradient(circle at top, #0b0f1a, #050816);
     color: white;
 }
-[data-testid="stSidebar"] {
-    background: #0a0f1c;
-    border-right: 1px solid #1f2a44;
-}
-h1, h2, h3 {
-    color: #7dd3fc !important;
-}
-.card {
-    background: rgba(255,255,255,0.06);
-    border: 1px solid rgba(125,211,252,0.25);
-    border-radius: 16px;
-    padding: 16px;
-}
 </style>
 """, unsafe_allow_html=True)
 
-# ================= CLASSES =================
+# ================= MODEL =================
 classes = ["Diseased", "Healthy"]
 
-# ================= TRANSFORM =================
 transform = transforms.Compose([
     transforms.Resize((224, 224)),
     transforms.ToTensor(),
-    transforms.Normalize([0.485, 0.456, 0.406],
-                         [0.229, 0.224, 0.225])
 ])
 
-# ================= CNN MODEL =================
 class CNN(nn.Module):
     def __init__(self):
         super().__init__()
@@ -71,210 +177,87 @@ class CNN(nn.Module):
             nn.Conv2d(3, 32, 3, padding=1),
             nn.ReLU(),
             nn.MaxPool2d(2),
-
             nn.Conv2d(32, 64, 3, padding=1),
             nn.ReLU(),
             nn.MaxPool2d(2),
-
-            nn.Conv2d(64, 128, 3, padding=1),
-            nn.ReLU(),
-
             nn.AdaptiveAvgPool2d(1)
         )
-        self.fc = nn.Linear(128, 2)
+        self.fc = nn.Linear(64, 2)
 
     def forward(self, x):
         x = self.net(x)
         x = x.view(x.size(0), -1)
         return self.fc(x)
 
-# ================= MODEL LOAD =================
 @st.cache_resource
 def load_model():
     try:
         model = CNN()
-        state = torch.load("cnn.pth", map_location="cpu")
-        model.load_state_dict(state)
+        model.load_state_dict(torch.load("cnn.pth", map_location="cpu"))
         model.eval()
         return model
-    except Exception as e:
-        st.sidebar.error("❌ Model Load Failed")
-        st.sidebar.warning(str(e))
+    except:
         return None
 
 model = load_model()
 
 # ================= GEMINI =================
 GEMINI_OK = False
-gemini_model = None
-GEMINI_ERROR = None
+gemini_client = None
 
-def init_gemini():
-    global GEMINI_OK, gemini_model, GEMINI_ERROR
-
-    if not GEMINI_AVAILABLE:
-        GEMINI_ERROR = "Gemini library not installed"
-        return
-
+if GEMINI_AVAILABLE:
     try:
         api_key = st.secrets.get("GEMINI_API_KEY", None)
+        if api_key:
+            gemini_client = genai.Client(api_key=api_key)
+            GEMINI_OK = True
+    except:
+        pass
 
-        if not api_key:
-            GEMINI_ERROR = "Missing API key"
-            return
-
-        genai.configure(api_key=api_key)
-
-        # FIXED: only working models
-        models_to_try = [
-            "gemini-3.0-flash",
-            "gemini-3.0-pro"
-        ]
-
-        for m in models_to_try:
-            try:
-                temp = genai.GenerativeModel(m)
-                test = temp.generate_content("test")
-
-                if test and hasattr(test, "text"):
-                    gemini_model = temp
-                    GEMINI_OK = True
-                    return
-            except:
-                continue
-
-        GEMINI_ERROR = "No Gemini model available"
-        GEMINI_OK = False
-
-    except Exception as e:
-        GEMINI_ERROR = str(e)
-        GEMINI_OK = False
-
-init_gemini()
-
-# ================= SESSION =================
-if "history" not in st.session_state:
-    st.session_state.history = []
-
-# ================= OFFLINE AI =================
 def offline_ai(pred, conf):
-    return f"""
-🔍 Offline Report
+    return f"{classes[pred]} ({conf:.2f}%) - Basic care recommended."
 
-Prediction: {classes[pred]}
-Confidence: {conf:.2f}%
-
-Advice:
-- Monitor plant health
-- Maintain proper watering
-- Check leaves regularly
-"""
-
-# ================= AI RESPONSE =================
 def gemini_advice(pred, conf):
     if not GEMINI_OK:
-        return f"""
-❌ GEMINI OFFLINE
+        return offline_ai(pred, conf)
 
-Reason:
-{GEMINI_ERROR}
-
---- Offline Mode ---
-{offline_ai(pred, conf)}
-"""
-
+    prompt = f"Plant is {classes[pred]} with {conf:.2f}% confidence. Give treatment."
     try:
-        prompt = f"""
-You are a plant disease expert.
-
-Plant status: {classes[pred]}
-Confidence: {conf:.2f}%
-
-Give:
-- Meaning
-- Cause
-- Treatment
-- Prevention
-"""
-        res = gemini_model.generate_content(prompt)
+        res = gemini_client.models.generate_content(
+            model="gemini-1.5-flash",
+            contents=prompt
+        )
         return res.text
-    except Exception as e:
-        return f"Gemini error: {str(e)}"
+    except:
+        return offline_ai(pred, conf)
 
 # ================= UPLOAD =================
-uploaded_file = st.file_uploader("Upload Leaf Image", type=["jpg", "png", "jpeg"])
+file = st.file_uploader("Upload Leaf Image", type=["jpg","png"])
 
-if uploaded_file:
+if file:
+    img = Image.open(file)
+    st.image(img, use_container_width=True)
 
-    image = Image.open(uploaded_file).convert("RGB")
-    img_tensor = transform(image).unsqueeze(0)
+    tensor = transform(img).unsqueeze(0)
 
-    col1, col2 = st.columns(2)
+    if model:
+        with torch.no_grad():
+            probs = torch.softmax(model(tensor), dim=1)[0].numpy()
+    else:
+        probs = np.array([0.5, 0.5])
 
-    with col1:
-        st.image(image, use_container_width=True)
+    pred = int(np.argmax(probs))
+    conf = float(probs[pred]) * 100
 
-    # ================= PREDICT =================
-    with st.spinner("Analyzing..."):
+    st.subheader(classes[pred])
+    st.progress(int(conf))
 
-        if model is None:
-            probs = np.array([0.5, 0.5])
-        else:
-            with torch.no_grad():
-                output = model(img_tensor)
-                probs = torch.softmax(output, dim=1)[0].numpy()
+    st.plotly_chart(px.bar(x=classes, y=probs * 100), use_container_width=True)
 
-        pred = int(np.argmax(probs))
-        conf = float(probs[pred]) * 100
-
-    st.session_state.history.append({
-        "Result": classes[pred],
-        "Confidence": round(conf, 2)
-    })
-
-    # ================= RESULT =================
-    with col2:
-        st.subheader("Prediction Result")
-
-        if classes[pred] == "Diseased":
-            st.error("🚨 Diseased Plant")
-        else:
-            st.success("🌿 Healthy Plant")
-
-        st.progress(int(conf))
-
-        fig = px.bar(x=classes, y=probs * 100)
-        st.plotly_chart(fig, use_container_width=True)
-
-    # ================= AI =================
-    st.subheader("🧠 AI Diagnosis Report")
+    st.subheader("🧠 AI Diagnosis")
     st.write(gemini_advice(pred, conf))
 
-# ================= HISTORY =================
-st.divider()
-st.subheader("📊 History")
-
-if st.session_state.history:
-    st.dataframe(pd.DataFrame(st.session_state.history))
-else:
-    st.info("No predictions yet.")
-
 # ================= SIDEBAR =================
-st.sidebar.title("System Status")
-
-if model:
-    st.sidebar.success("CNN Loaded")
-else:
-    st.sidebar.error("CNN Failed")
-
-if GEMINI_OK:
-    st.sidebar.success("Gemini ONLINE 🧠")
-else:
-    st.sidebar.error("Gemini OFFLINE ❌")
-    st.sidebar.warning(GEMINI_ERROR)
-
-st.sidebar.info("Stable Production Build")
-
 st.sidebar.write(f"👤 {st.session_state.user}")
 if st.sidebar.button("Logout"):
     logout()
