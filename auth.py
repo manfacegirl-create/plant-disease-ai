@@ -83,7 +83,6 @@ def auth_page():
 
     st.markdown('<div class="auth-box">', unsafe_allow_html=True)
     st.markdown('<div class="title">🔐 LeafSentry Access</div>', unsafe_allow_html=True)
-    st.markdown('<div class="subtitle">Secure AI System Login</div>', unsafe_allow_html=True)
 
     tab1, tab2 = st.tabs(["Login", "Sign Up"])
 
