@@ -73,11 +73,7 @@ def auth_page():
         color: #7dd3fc;
         margin-bottom: 10px;
     }
-    .subtitle {
-        text-align: center;
-        color: #aaa;
-        margin-bottom: 20px;
-    }
+   
     </style>
     """, unsafe_allow_html=True)
 
