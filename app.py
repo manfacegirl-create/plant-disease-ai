@@ -45,26 +45,21 @@ def strong_password(password):
 
 # ================= AUTH =================
 def signup(username, password):
-
     try:
         c.execute(
             "INSERT INTO users VALUES (?, ?)",
             (username, hash_password(password))
         )
-
         conn.commit()
         return True
-
     except:
         return False
 
 def login(username, password):
-
     c.execute(
         "SELECT password FROM users WHERE username=?",
         (username,)
     )
-
     data = c.fetchone()
 
     if data:
@@ -83,36 +78,43 @@ if "page" not in st.session_state:
 st.markdown("""
 <style>
 
-/* MAIN */
 .stApp{
     background:#08130d;
     color:white;
 }
 
-/* HIDE STREAMLIT */
+/* HIDE STREAMLIT UI */
 #MainMenu {visibility:hidden;}
 footer {visibility:hidden;}
 header {visibility:hidden;}
 
-/* NAVBAR BUTTONS */
+/* REMOVE GAP BETWEEN NAV COLUMNS */
+div[data-testid="column"]{
+    padding:0px !important;
+    margin:0px !important;
+}
+
+/* NAV BUTTONS - CONNECTED BAR */
 div.stButton > button{
     width:100%;
-    height:70px;
+    height:65px;
     background:#15803d;
     color:white;
     border:none;
     border-radius:0px;
-    font-size:18px;
+    font-size:16px;
     font-weight:700;
-    transition:0.3s;
+    transition:0.25s;
 }
 
+/* HOVER */
 div.stButton > button:hover{
     background:#e5e7eb;
     color:#15803d;
+    transform:scale(1.02);
 }
 
-/* HERO SECTION */
+/* HERO */
 .hero{
     background:
     linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.75)),
@@ -123,7 +125,6 @@ div.stButton > button:hover{
 
     padding:100px 70px;
     border-radius:25px;
-
     margin-top:20px;
     margin-bottom:30px;
 }
@@ -131,7 +132,6 @@ div.stButton > button:hover{
 .hero-title{
     font-size:70px;
     font-weight:900;
-    color:white;
 }
 
 .hero-sub{
@@ -148,19 +148,12 @@ div.stButton > button:hover{
     border-radius:20px;
     padding:30px;
     margin-top:20px;
-    transition:0.3s;
-}
-
-.card:hover{
-    transform:translateY(-5px);
-    box-shadow:0 0 20px rgba(74,222,128,0.2);
 }
 
 .card-title{
     color:#4ade80;
     font-size:28px;
     font-weight:700;
-    margin-bottom:15px;
 }
 
 /* INPUT */
@@ -168,7 +161,6 @@ div.stButton > button:hover{
     background:#0b1d13 !important;
     color:white !important;
     border:1px solid #1f5134 !important;
-    border-radius:10px !important;
 }
 
 /* FILE UPLOADER */
@@ -190,34 +182,24 @@ section[data-testid="stFileUploader"]{
 </style>
 """, unsafe_allow_html=True)
 
-# ================= NAVBAR =================
-col1, col2, col3, col4, col5, col6 = st.columns([1,1,1,1.5,1.3,1])
+# ================= NAVBAR (FIXED) =================
+cols = st.columns(6, gap="small")
 
-with col1:
-    if st.button("Home"):
-        st.session_state.page = "Home"
+nav_items = [
+    ("Home", "Home"),
+    ("Plant", "Plant"),
+    ("Blog", "Blog"),
+    ("Privacy Policy", "Privacy"),
+    ("Contact Us", "Contact"),
+    ("Login", "Login")
+]
 
-with col2:
-    if st.button("Plant"):
-        st.session_state.page = "Plant"
+for i, (label, page) in enumerate(nav_items):
+    with cols[i]:
+        if st.button(label, key=page):
+            st.session_state.page = page
 
-with col3:
-    if st.button("Blog"):
-        st.session_state.page = "Blog"
-
-with col4:
-    if st.button("Privacy Policy"):
-        st.session_state.page = "Privacy"
-
-with col5:
-    if st.button("Contact Us"):
-        st.session_state.page = "Contact"
-
-with col6:
-    if st.button("Login"):
-        st.session_state.page = "Login"
-
-# ================= HOME PAGE =================
+# ================= HOME =================
 if st.session_state.page == "Home":
 
     st.markdown("""
@@ -228,8 +210,7 @@ LeafSentry AI
 </div>
 
 <div class="hero-sub">
-Smart plant disease detection powered by deep learning
-and artificial intelligence.
+Smart plant disease detection powered by deep learning and AI.
 </div>
 
 </div>
@@ -240,214 +221,91 @@ and artificial intelligence.
     with c1:
         st.markdown("""
 <div class="card">
-
-<div class="card-title">
-🌿 Plant Monitoring
-</div>
-
-<p>
-Detect unhealthy plants instantly using image analysis.
-</p>
-
+<div class="card-title">🌿 Plant Monitoring</div>
+<p>Detect unhealthy plants instantly.</p>
 </div>
 """, unsafe_allow_html=True)
 
     with c2:
         st.markdown("""
 <div class="card">
-
-<div class="card-title">
-⚡ Fast Detection
-</div>
-
-<p>
-Upload leaf images and receive instant AI predictions.
-</p>
-
+<div class="card-title">⚡ Fast Detection</div>
+<p>Upload leaf images for instant AI prediction.</p>
 </div>
 """, unsafe_allow_html=True)
 
     with c3:
         st.markdown("""
 <div class="card">
-
-<div class="card-title">
-🧠 Deep Learning
-</div>
-
-<p>
-Neural network powered disease classification system.
-</p>
-
+<div class="card-title">🧠 Deep Learning</div>
+<p>Neural network disease classification.</p>
 </div>
 """, unsafe_allow_html=True)
 
-# ================= PLANT PAGE =================
+# ================= PLANT =================
 elif st.session_state.page == "Plant":
-
     st.title("🌱 Plant Information")
 
-    st.markdown("""
-<div class="card">
-
-<div class="card-title">
-Common Plant Diseases
-</div>
-
-<ul>
-<li>Leaf Spot</li>
-<li>Powdery Mildew</li>
-<li>Root Rot</li>
-<li>Rust Fungus</li>
-<li>Bacterial Wilt</li>
-</ul>
-
-</div>
-""", unsafe_allow_html=True)
-
-# ================= BLOG PAGE =================
+# ================= BLOG =================
 elif st.session_state.page == "Blog":
-
     st.title("📰 Blog")
 
-    st.markdown("""
-<div class="card">
-
-<div class="card-title">
-How AI Helps Modern Farming
-</div>
-
-<p>
-Artificial intelligence helps farmers detect plant diseases faster
-and improve crop quality.
-</p>
-
-</div>
-""", unsafe_allow_html=True)
-
-# ================= PRIVACY PAGE =================
+# ================= PRIVACY =================
 elif st.session_state.page == "Privacy":
-
     st.title("🔒 Privacy Policy")
 
-    st.markdown("""
-<div class="card">
-
-<p>
-Your uploaded images and personal information remain private
-and securely stored.
-</p>
-
-</div>
-""", unsafe_allow_html=True)
-
-# ================= CONTACT PAGE =================
+# ================= CONTACT =================
 elif st.session_state.page == "Contact":
-
     st.title("📞 Contact Us")
 
-    st.markdown("""
-<div class="card">
-
-<p>
-📧 Email: leafsentry@gmail.com
-</p>
-
-<p>
-📱 Phone: +60 123-456-789
-</p>
-
-</div>
-""", unsafe_allow_html=True)
-
-# ================= LOGIN PAGE =================
+# ================= LOGIN =================
 elif st.session_state.page == "Login":
 
-    st.markdown("""
-<div class="card">
-
-<div class="card-title">
-🔐 Login To LeafSentry AI
-</div>
-
-<p>
-Access your AI plant disease detection dashboard.
-</p>
-
-</div>
-""", unsafe_allow_html=True)
+    st.title("🔐 Login")
 
     tab1, tab2 = st.tabs(["Login", "Sign Up"])
 
     with tab1:
-
         username = st.text_input("Username")
-
-        password = st.text_input(
-            "Password",
-            type="password"
-        )
+        password = st.text_input("Password", type="password")
 
         if st.button("Login Account"):
-
             if login(username, password):
-
                 st.session_state.logged_in = True
                 st.session_state.page = "ML"
-
                 st.success("Login Successful")
-
                 st.rerun()
-
             else:
-                st.error("Invalid Username or Password")
+                st.error("Invalid login")
 
     with tab2:
-
-        new_user = st.text_input("Create Username")
-
-        new_pass = st.text_input(
-            "Create Password",
-            type="password"
-        )
+        new_user = st.text_input("New Username")
+        new_pass = st.text_input("New Password", type="password")
 
         if st.button("Create Account"):
-
             if strong_password(new_pass):
-
                 if signup(new_user, new_pass):
-
-                    st.success("Account Created Successfully")
-
+                    st.success("Account Created")
                 else:
-                    st.error("Username Already Exists")
-
+                    st.error("Username exists")
             else:
-                st.warning(
-                    "Password must contain letters and numbers"
-                )
+                st.warning("Weak password")
 
-# ================= ML PAGE =================
+# ================= ML =================
 elif st.session_state.page == "ML":
 
     if not st.session_state.logged_in:
-
-        st.warning("Please login first.")
-
+        st.warning("Please login first")
         st.session_state.page = "Login"
-
         st.rerun()
 
     st.title("🧠 Plant Disease Detection")
 
     if st.button("Logout"):
-
         st.session_state.logged_in = False
         st.session_state.page = "Home"
-
         st.rerun()
 
-    # MODEL
     classes = ["Diseased", "Healthy"]
 
     transform = transforms.Compose([
@@ -456,13 +314,9 @@ elif st.session_state.page == "ML":
     ])
 
     class CNN(nn.Module):
-
         def __init__(self):
-
             super().__init__()
-
             self.net = nn.Sequential(
-
                 nn.Conv2d(3, 32, 3, padding=1),
                 nn.ReLU(),
                 nn.MaxPool2d(2),
@@ -472,117 +326,63 @@ elif st.session_state.page == "ML":
                 nn.MaxPool2d(2),
 
                 nn.AdaptiveAvgPool2d(1)
-
             )
-
             self.fc = nn.Linear(64, 2)
 
         def forward(self, x):
-
             x = self.net(x)
-
-            return self.fc(
-                x.view(x.size(0), -1)
-            )
+            return self.fc(x.view(x.size(0), -1))
 
     @st.cache_resource
     def load_model():
-
         try:
-
             model = CNN()
-
-            model.load_state_dict(
-                torch.load(
-                    "cnn.pth",
-                    map_location="cpu"
-                )
-            )
-
+            model.load_state_dict(torch.load("cnn.pth", map_location="cpu"))
             model.eval()
-
             return model
-
         except:
             return None
 
     model = load_model()
 
-    uploaded = st.file_uploader(
-        "Upload Leaf Image",
-        type=["jpg", "jpeg", "png"]
-    )
+    uploaded = st.file_uploader("Upload Leaf Image", type=["jpg", "png", "jpeg"])
 
     if uploaded:
-
         image = Image.open(uploaded)
 
-        col1, col2 = st.columns(2)
+        c1, c2 = st.columns(2)
 
-        with col1:
-            st.image(
-                image,
-                use_container_width=True
-            )
+        with c1:
+            st.image(image, use_container_width=True)
 
         x = transform(image).unsqueeze(0)
 
         if model:
-
             with torch.no_grad():
-
-                probs = torch.softmax(
-                    model(x),
-                    dim=1
-                )[0].numpy()
-
+                probs = torch.softmax(model(x), dim=1)[0].numpy()
         else:
-
             probs = np.array([0.5, 0.5])
 
-        pred = int(np.argmax(probs))
+        pred = np.argmax(probs)
+        conf = probs[pred] * 100
 
-        conf = float(probs[pred]) * 100
-
-        with col2:
-
+        with c2:
             st.markdown(f"""
 <div class="card">
-
-<div class="card-title">
-Prediction Result
-</div>
-
-<h1>
-{classes[pred]}
-</h1>
-
-<h3>
-{conf:.2f}% Confidence
-</h3>
-
+<div class="card-title">Prediction</div>
+<h1>{classes[pred]}</h1>
+<h3>{conf:.2f}%</h3>
 </div>
 """, unsafe_allow_html=True)
 
             st.progress(int(conf))
 
-        fig = px.bar(
-            x=classes,
-            y=probs * 100,
-            labels={
-                "x":"Class",
-                "y":"Confidence"
-            }
-        )
-
-        st.plotly_chart(
-            fig,
-            use_container_width=True
-        )
+        fig = px.bar(x=classes, y=probs * 100)
+        st.plotly_chart(fig, use_container_width=True)
 
 # ================= FOOTER =================
 st.markdown("""
 <div class="footer">
-© 2026 LeafSentry AI • Smart Agriculture Platform
+© 2026 LeafSentry AI
 </div>
 """, unsafe_allow_html=True)
