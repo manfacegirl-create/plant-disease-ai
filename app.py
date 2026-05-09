@@ -16,12 +16,9 @@ st.set_page_config(
     layout="wide"
 )
 
-# ================= ROUTING (NEW SYSTEM) =================
-query_params = st.query_params
-page = query_params.get("page", "Home")
-
-if isinstance(page, list):
-    page = page[0]
+# ================= STATE =================
+if "page" not in st.session_state:
+    st.session_state.page = "Home"
 
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
@@ -61,101 +58,110 @@ def login(username, password):
     data = c.fetchone()
     return data and check_password(password, data[0])
 
-# ================= CSS (NEON GLASS UI) =================
+# ================= CSS (GREEN NEON UI) =================
 st.markdown("""
 <style>
 
 /* BACKGROUND */
 .stApp {
-    background: radial-gradient(circle at top, #0b1a12, #050a07);
+    background: radial-gradient(circle at top, #07140c, #020705);
     color: white;
 }
 
-/* HIDE STREAMLIT */
+/* HIDE STREAMLIT UI */
 #MainMenu {visibility:hidden;}
 footer {visibility:hidden;}
 header {visibility:hidden;}
 
-/* ================= GLASS NAVBAR ================= */
+/* ================= NAVBAR ================= */
 .navbar {
-    position: sticky;
-    top: 0;
-    z-index: 999;
     display: flex;
     justify-content: space-between;
     align-items: center;
 
-    padding: 12px 20px;
+    padding: 12px 25px;
 
-    background: rgba(10, 25, 18, 0.6);
+    background: rgba(10, 40, 20, 0.65);
     backdrop-filter: blur(12px);
 
-    border-bottom: 1px solid rgba(34, 197, 94, 0.3);
+    border-bottom: 1px solid rgba(34, 197, 94, 0.4);
+
+    position: sticky;
+    top: 0;
+    z-index: 999;
 }
 
-/* NAV LINKS */
-.nav-links {
+/* TITLE IN NAVBAR */
+.logo {
+    font-size: 24px;
+    font-weight: 900;
+    color: #22c55e;
+    text-shadow: 0 0 10px #22c55e;
+}
+
+/* BUTTON ROW */
+.nav-buttons {
     display: flex;
     gap: 10px;
 }
 
-/* NAV BUTTON STYLE */
-.nav-item {
-    padding: 10px 18px;
-    border-radius: 12px;
-    text-decoration: none;
+/* NAV BUTTONS */
+.nav-btn button {
+    background: transparent;
+    border: 1px solid rgba(34,197,94,0.4);
     color: #d1fae5;
-    font-weight: 600;
-
+    padding: 10px 16px;
+    border-radius: 12px;
+    font-weight: 700;
     transition: 0.3s;
 }
 
 /* HOVER */
-.nav-item:hover {
-    background: rgba(34, 197, 94, 0.15);
-    box-shadow: 0 0 10px #22c55e;
+.nav-btn button:hover {
+    background: rgba(34,197,94,0.2);
+    box-shadow: 0 0 12px #22c55e;
+    transform: translateY(-2px);
 }
 
-/* ACTIVE PAGE */
-.active {
-    background: #22c55e;
+/* ACTIVE */
+.active button {
+    background: #22c55e !important;
     color: black !important;
     box-shadow: 0 0 15px #22c55e;
 }
 
-/* MOBILE HAMBURGER */
-.menu {
-    display: none;
-}
-
 /* HERO */
 .hero {
+    padding: 120px 60px;
+    border-radius: 25px;
+    margin-top: 20px;
+
     background:
-    linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.8)),
+    linear-gradient(rgba(0,0,0,0.65), rgba(0,0,0,0.85)),
     url("https://images.unsplash.com/photo-1466692476868-aef1dfb1e735?q=80&w=2070&auto=format&fit=crop");
 
     background-size: cover;
-    padding: 100px 60px;
-    border-radius: 25px;
-    margin-top: 20px;
 }
 
+/* BIG TITLE FIX */
 .hero-title {
-    font-size: 70px;
-    font-weight: 900;
+    font-size: clamp(48px, 6vw, 90px);
+    font-weight: 1000;
     color: #4ade80;
-    text-shadow: 0 0 20px #22c55e;
+    text-shadow: 0 0 25px #22c55e;
+    line-height: 1.1;
 }
 
 .hero-sub {
     font-size: 22px;
-    color: #d1fae5;
     max-width: 700px;
+    color: #d1fae5;
+    margin-top: 15px;
 }
 
 /* CARDS */
 .card {
-    background: rgba(16, 24, 39, 0.8);
+    background: rgba(16, 24, 39, 0.85);
     border: 1px solid #1f5134;
     border-radius: 20px;
     padding: 25px;
@@ -170,96 +176,86 @@ header {visibility:hidden;}
 .card-title {
     color: #4ade80;
     font-size: 24px;
-    font-weight: 700;
-}
-
-/* MOBILE */
-@media (max-width: 768px) {
-    .nav-links {
-        display: none;
-    }
-
-    .menu {
-        display: block;
-        color: white;
-        font-size: 24px;
-    }
+    font-weight: 800;
 }
 
 </style>
 """, unsafe_allow_html=True)
 
-# ================= NAVBAR (GLASS + ACTIVE STATE) =================
-nav_items = ["Home", "Plant", "Blog", "Privacy", "Contact", "Login"]
+# ================= NAVBAR (NO PAGE SWITCHING, STATE ONLY) =================
+def nav_button(label, page):
+    active = "active" if st.session_state.page == page else ""
+    st.markdown(f'<div class="nav-btn {active}">', unsafe_allow_html=True)
+    if st.button(label, key=page):
+        st.session_state.page = page
+    st.markdown('</div>', unsafe_allow_html=True)
 
-st.markdown('<div class="navbar">', unsafe_allow_html=True)
+st.markdown("""
+<div class="navbar">
+    <div class="logo">🌿 LeafSentry AI</div>
+    <div class="nav-buttons">
+""", unsafe_allow_html=True)
 
-st.markdown("🌿 <b>LeafSentry AI</b>", unsafe_allow_html=True)
+cols = st.columns(6, gap="small")
 
-links_html = '<div class="nav-links">'
+with cols[0]:
+    nav_button("Home", "Home")
+with cols[1]:
+    nav_button("Plant", "Plant")
+with cols[2]:
+    nav_button("Blog", "Blog")
+with cols[3]:
+    nav_button("Privacy", "Privacy")
+with cols[4]:
+    nav_button("Contact", "Contact")
+with cols[5]:
+    nav_button("Login", "Login")
 
-for item in nav_items:
-    active_class = "active" if page == item else ""
-    links_html += f'<a class="nav-item {active_class}" href="?page={item}">{item}</a>'
-
-links_html += "</div>"
-
-st.markdown(links_html, unsafe_allow_html=True)
-
-st.markdown("</div>", unsafe_allow_html=True)
-
-# ================= ROUTE SYNC =================
-st.session_state.page = page
+st.markdown("</div></div>", unsafe_allow_html=True)
 
 # ================= HOME =================
-if page == "Home":
+if st.session_state.page == "Home":
 
     st.markdown("""
 <div class="hero">
-<div class="hero-title">LeafSentry AI</div>
-<div class="hero-sub">
-Smart plant disease detection powered by AI & deep learning.
-</div>
+    <div class="hero-title">
+        LeafSentry AI
+    </div>
+
+    <div class="hero-sub">
+        Smart plant disease detection powered by AI and deep learning.
+    </div>
 </div>
 """, unsafe_allow_html=True)
 
     c1, c2, c3 = st.columns(3)
 
     with c1:
-        st.markdown("""
-<div class="card"><div class="card-title">🌿 Monitoring</div><p>Detect plant health instantly.</p></div>
-""", unsafe_allow_html=True)
+        st.markdown("""<div class="card"><div class="card-title">🌿 Monitoring</div>Detect plant health instantly.</div>""", unsafe_allow_html=True)
 
     with c2:
-        st.markdown("""
-<div class="card"><div class="card-title">⚡ Fast AI</div><p>Instant predictions from images.</p></div>
-""", unsafe_allow_html=True)
+        st.markdown("""<div class="card"><div class="card-title">⚡ Fast AI</div>Instant leaf analysis.</div>""", unsafe_allow_html=True)
 
     with c3:
-        st.markdown("""
-<div class="card"><div class="card-title">🧠 Deep Learning</div><p>Neural network classification.</p></div>
-""", unsafe_allow_html=True)
+        st.markdown("""<div class="card"><div class="card-title">🧠 Deep Learning</div>AI disease classification.</div>""", unsafe_allow_html=True)
 
-# ================= PLANT =================
-elif page == "Plant":
+# ================= OTHER PAGES =================
+elif st.session_state.page == "Plant":
     st.title("🌱 Plant Info")
 
-# ================= BLOG =================
-elif page == "Blog":
+elif st.session_state.page == "Blog":
     st.title("📰 Blog")
 
-# ================= PRIVACY =================
-elif page == "Privacy":
+elif st.session_state.page == "Privacy":
     st.title("🔒 Privacy Policy")
 
-# ================= CONTACT =================
-elif page == "Contact":
-    st.title("📞 Contact")
+elif st.session_state.page == "Contact":
+    st.title("📞 Contact Us")
 
 # ================= LOGIN =================
-elif page == "Login":
+elif st.session_state.page == "Login":
 
-    st.title("🔐 Login System")
+    st.title("🔐 Login")
 
     tab1, tab2 = st.tabs(["Login", "Sign Up"])
 
@@ -270,7 +266,7 @@ elif page == "Login":
         if st.button("Login"):
             if login(u, p):
                 st.session_state.logged_in = True
-                st.success("Login success")
+                st.success("Logged in")
             else:
                 st.error("Wrong credentials")
 
@@ -288,10 +284,10 @@ elif page == "Login":
                 st.warning("Weak password")
 
 # ================= ML =================
-elif page == "ML":
+elif st.session_state.page == "ML":
 
     if not st.session_state.logged_in:
-        st.warning("Login required")
+        st.warning("Please login first")
         st.stop()
 
     st.title("🧠 Disease Detection AI")
@@ -334,7 +330,7 @@ elif page == "ML":
 
     model = load_model()
 
-    img = st.file_uploader("Upload Leaf Image", type=["png","jpg","jpeg"])
+    img = st.file_uploader("Upload Leaf Image", type=["jpg","png","jpeg"])
 
     if img:
         image = Image.open(img)
@@ -354,10 +350,3 @@ elif page == "ML":
 
         fig = px.bar(x=classes, y=probs*100)
         st.plotly_chart(fig, use_container_width=True)
-
-# ================= FOOTER =================
-st.markdown("""
-<div style="text-align:center; padding:30px; color:#86efac;">
-© 2026 LeafSentry AI • Built with Streamlit
-</div>
-""", unsafe_allow_html=True)
