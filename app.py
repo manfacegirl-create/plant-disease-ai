@@ -1,6 +1,3 @@
-# Professional LeafSentry AI Streamlit UI
-
-```python
 # ================= IMPORTS =================
 import streamlit as st
 import sqlite3
@@ -49,14 +46,12 @@ def hash_password(password):
         bcrypt.gensalt()
     )
 
-
 def check_password(password, hashed):
 
     return bcrypt.checkpw(
         password.encode(),
         hashed
     )
-
 
 def signup(username, password):
 
@@ -77,7 +72,6 @@ def signup(username, password):
     except:
         return False
 
-
 def login(username, password):
 
     c.execute(
@@ -96,7 +90,6 @@ def login(username, password):
 
     return False
 
-
 def strong_password(password):
 
     return (
@@ -105,245 +98,94 @@ def strong_password(password):
         and any(i.isalpha() for i in password)
     )
 
-# ================= PROFESSIONAL UI =================
+# ================= CSS =================
 st.markdown("""
 <style>
 
-/* ================= MAIN APP ================= */
-
+/* BACKGROUND */
 .stApp {
-
-    background:
-    linear-gradient(
-        135deg,
-        #eef7f0 0%,
-        #dcefe2 50%,
-        #c8e6d1 100%
-    );
-
-    color: #111111;
+    background-color: #dfeee2;
 }
 
 /* REMOVE STREAMLIT DEFAULT */
-#MainMenu {visibility:hidden;}
-footer {visibility:hidden;}
-header {visibility:hidden;}
+#MainMenu {
+    visibility: hidden;
+}
 
+footer {
+    visibility: hidden;
+}
+
+header {
+    visibility: hidden;
+}
+
+/* REMOVE TOP SPACE */
 .block-container {
     padding-top: 1rem;
-    padding-bottom: 2rem;
 }
 
-/* ================= NAVBAR ================= */
-
+/* NAVBAR */
 .navbar {
 
-    background: rgba(17, 53, 36, 0.95);
+    background-color: #204d34;
 
-    padding: 18px 28px;
+    padding: 20px;
 
-    border-radius: 22px;
+    border-radius: 18px;
 
-    margin-bottom: 28px;
-
-    backdrop-filter: blur(10px);
-
-    box-shadow: 0px 8px 24px rgba(0,0,0,0.12);
+    margin-bottom: 25px;
 }
 
+/* LOGO */
 .logo {
 
     color: white;
 
-    font-size: 38px;
+    font-size: 36px;
 
-    font-weight: 900;
-
-    letter-spacing: 1px;
+    font-weight: bold;
 }
 
-/* ================= BUTTONS ================= */
-
+/* BUTTONS */
 .stButton > button {
 
     width: 100%;
 
-    background: white;
+    background-color: white;
 
-    color: #0d2f1d;
+    color: black;
 
-    border: none;
+    border-radius: 12px;
 
-    border-radius: 14px;
+    border: 2px solid #3fa466;
 
-    padding: 12px;
+    padding: 10px;
 
-    font-weight: 700;
-
-    transition: 0.25s;
-
-    box-shadow: 0px 3px 10px rgba(0,0,0,0.08);
+    font-weight: bold;
 }
 
+/* BUTTON HOVER */
 .stButton > button:hover {
 
-    background: #2f8f57;
+    background-color: #3fa466;
 
     color: white;
-
-    transform: translateY(-3px);
-}
-
-/* ================= HERO SECTION ================= */
-
-.hero {
-
-    background:
-    linear-gradient(
-        rgba(0,0,0,0.45),
-        rgba(0,0,0,0.55)
-    ),
-
-    url('https://images.unsplash.com/photo-1523348837708-15d4a09cfac2?q=80&w=2070&auto=format&fit=crop');
-
-    background-size: cover;
-
-    background-position: center;
-
-    border-radius: 30px;
-
-    padding: 110px 70px;
-
-    margin-bottom: 35px;
-
-    box-shadow: 0px 10px 30px rgba(0,0,0,0.15);
-}
-
-.hero-title {
-
-    color: white;
-
-    font-size: 78px;
-
-    font-weight: 900;
-
-    line-height: 1.05;
-}
-
-.hero-sub {
-
-    color: #f3fff6;
-
-    font-size: 24px;
-
-    max-width: 760px;
-
-    margin-top: 18px;
-
-    line-height: 1.7;
-}
-
-/* ================= FEATURE CARDS ================= */
-
-.feature-card {
-
-    background: rgba(255,255,255,0.92);
-
-    border-radius: 24px;
-
-    padding: 35px;
-
-    min-height: 220px;
-
-    backdrop-filter: blur(10px);
-
-    box-shadow: 0px 8px 22px rgba(0,0,0,0.08);
-
-    transition: 0.3s;
-}
-
-.feature-card:hover {
-
-    transform: translateY(-8px);
-
-    box-shadow: 0px 14px 28px rgba(0,0,0,0.12);
-}
-
-.feature-title {
-
-    color: #111111;
-
-    font-size: 30px;
-
-    font-weight: 900;
-
-    margin-bottom: 15px;
-}
-
-.feature-text {
-
-    color: #222222;
-
-    font-size: 18px;
-
-    line-height: 1.8;
-}
-
-/* ================= INPUTS ================= */
-
-.stTextInput input {
-
-    border-radius: 14px !important;
-
-    border: 1px solid #b7d8c0 !important;
-
-    padding: 12px !important;
-
-    background: white !important;
-
-    color: black !important;
-}
-
-/* ================= FILE UPLOADER ================= */
-
-section[data-testid="stFileUploader"] {
-
-    background: white;
-
-    padding: 22px;
-
-    border-radius: 18px;
-
-    border: 1px solid #d2e6d8;
-
-    box-shadow: 0px 4px 10px rgba(0,0,0,0.06);
-}
-
-/* ================= TITLES ================= */
-
-h1, h2, h3 {
-    color: #111111 !important;
-}
-
-p {
-    color: #222222;
 }
 
 </style>
 """, unsafe_allow_html=True)
 
 # ================= NAVBAR =================
-st.markdown(
-    """
-    <div class="navbar">
-        <div class="logo">
-            🌿 LeafSentry AI
-        </div>
+st.markdown("""
+<div class="navbar">
+    <div class="logo">
+        🌿 LeafSentry AI
     </div>
-    """,
-    unsafe_allow_html=True
-)
+</div>
+""", unsafe_allow_html=True)
 
+# ================= NAVIGATION =================
 pages = [
     "Home",
     "Plant",
@@ -360,83 +202,142 @@ for i, page in enumerate(pages):
     with cols[i]:
 
         if st.button(page):
+
             st.session_state.page = page
 
 # ================= HOME PAGE =================
 if st.session_state.page == "Home":
 
+    # HERO IMAGE
+    st.image(
+        "https://images.unsplash.com/photo-1523348837708-15d4a09cfac2?q=80&w=2070&auto=format&fit=crop",
+        use_container_width=True
+    )
+
+    # TITLE
     st.markdown(
         """
-        <div class="hero">
-
-            <div class="hero-title">
-                Smart Farming<br>
-                Powered by AI
-            </div>
-
-            <div class="hero-sub">
-                Advanced plant disease detection and crop health analysis
-                using modern artificial intelligence technology.
-            </div>
-
-        </div>
+        <h1 style='
+            color:black;
+            font-size:70px;
+            font-weight:900;
+            margin-top:-250px;
+            padding-left:40px;
+        '>
+            LeafSentry AI
+        </h1>
         """,
         unsafe_allow_html=True
     )
 
+    # SUBTITLE
+    st.markdown(
+        """
+        <p style='
+            color:black;
+            font-size:24px;
+            font-weight:600;
+            padding-left:40px;
+            margin-bottom:180px;
+        '>
+            Smart AI system for plant disease detection
+            and crop health monitoring.
+        </p>
+        """,
+        unsafe_allow_html=True
+    )
+
+    # ================= CARDS =================
+
     c1, c2, c3 = st.columns(3)
 
+    # CARD 1
     with c1:
 
         st.markdown(
             """
-            <div class="feature-card">
+            <div style="
+                background:white;
+                padding:30px;
+                border-radius:20px;
+                box-shadow:0px 4px 10px rgba(0,0,0,0.1);
+            ">
 
-                <div class="feature-title">
-                    🌿 Disease Monitoring
-                </div>
+                <h2 style="
+                    color:black;
+                    font-weight:900;
+                ">
+                    🌿 Monitoring
+                </h2>
 
-                <div class="feature-text">
-                    Instantly detect plant diseases using AI-powered image analysis.
-                </div>
+                <p style="
+                    color:black;
+                    font-size:18px;
+                ">
+                    Detect plant diseases instantly using AI monitoring.
+                </p>
 
             </div>
             """,
             unsafe_allow_html=True
         )
 
+    # CARD 2
     with c2:
 
         st.markdown(
             """
-            <div class="feature-card">
+            <div style="
+                background:white;
+                padding:30px;
+                border-radius:20px;
+                box-shadow:0px 4px 10px rgba(0,0,0,0.1);
+            ">
 
-                <div class="feature-title">
-                    ⚡ Fast Prediction
-                </div>
+                <h2 style="
+                    color:black;
+                    font-weight:900;
+                ">
+                    ⚡ Speed
+                </h2>
 
-                <div class="feature-text">
-                    Receive accurate crop health predictions within seconds.
-                </div>
+                <p style="
+                    color:black;
+                    font-size:18px;
+                ">
+                    Fast real-time crop health predictions.
+                </p>
 
             </div>
             """,
             unsafe_allow_html=True
         )
 
+    # CARD 3
     with c3:
 
         st.markdown(
             """
-            <div class="feature-card">
+            <div style="
+                background:white;
+                padding:30px;
+                border-radius:20px;
+                box-shadow:0px 4px 10px rgba(0,0,0,0.1);
+            ">
 
-                <div class="feature-title">
-                    🧠 Deep Learning
-                </div>
+                <h2 style="
+                    color:black;
+                    font-weight:900;
+                ">
+                    🧠 AI Model
+                </h2>
 
-                <div class="feature-text">
-                    Powered by modern neural network models for precision agriculture.
-                </div>
+                <p style="
+                    color:black;
+                    font-size:18px;
+                ">
+                    Deep learning model for disease classification.
+                </p>
 
             </div>
             """,
@@ -448,10 +349,11 @@ elif st.session_state.page == "Plant":
 
     st.title("🌱 Plant Disease Detection")
 
+    # LOGIN REQUIRED
     if not st.session_state.logged_in:
 
         st.error(
-            "Please login first to access the AI prediction system."
+            "You must login first to use the AI model."
         )
 
     else:
@@ -475,12 +377,13 @@ elif st.session_state.page == "Plant":
                 use_container_width=True
             )
 
+            # DUMMY RESULT
             st.success("Prediction Complete")
 
             st.write("### Prediction Result")
             st.write("Healthy Plant")
 
-            st.write("### Confidence Score")
+            st.write("### Confidence")
             st.progress(95)
 
 # ================= BLOG PAGE =================
@@ -489,7 +392,7 @@ elif st.session_state.page == "Blog":
     st.title("📰 Blog")
 
     st.write(
-        "Latest smart farming and AI agriculture updates."
+        "Latest AI farming updates."
     )
 
 # ================= PRIVACY PAGE =================
@@ -498,13 +401,13 @@ elif st.session_state.page == "Privacy":
     st.title("🔒 Privacy Policy")
 
     st.write(
-        "All uploaded images and user data are securely protected."
+        "Your data is securely protected."
     )
 
 # ================= CONTACT PAGE =================
 elif st.session_state.page == "Contact":
 
-    st.title("📞 Contact Us")
+    st.title("📞 Contact")
 
     st.write(
         "support@leafsentry.ai"
@@ -583,4 +486,3 @@ elif st.session_state.page == "Login":
                 st.warning(
                     "Password must contain letters and numbers and be at least 6 characters."
                 )
-```
