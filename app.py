@@ -89,12 +89,12 @@ st.markdown("""
     color:white;
 }
 
-/* Hide Streamlit Branding */
+/* HIDE STREAMLIT */
 #MainMenu {visibility:hidden;}
 footer {visibility:hidden;}
 header {visibility:hidden;}
 
-/* NAVBAR */
+/* NAVBAR BUTTONS */
 div.stButton > button{
     width:100%;
     height:70px;
@@ -102,7 +102,7 @@ div.stButton > button{
     color:white;
     border:none;
     border-radius:0px;
-    font-size:20px;
+    font-size:18px;
     font-weight:700;
     transition:0.3s;
 }
@@ -112,10 +112,10 @@ div.stButton > button:hover{
     color:#15803d;
 }
 
-/* HERO */
+/* HERO SECTION */
 .hero{
     background:
-    linear-gradient(rgba(0,0,0,0.65), rgba(0,0,0,0.75)),
+    linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.75)),
     url("https://images.unsplash.com/photo-1466692476868-aef1dfb1e735?q=80&w=2070&auto=format&fit=crop");
 
     background-size:cover;
@@ -123,12 +123,13 @@ div.stButton > button:hover{
 
     padding:100px 70px;
     border-radius:25px;
+
     margin-top:20px;
     margin-bottom:30px;
 }
 
 .hero-title{
-    font-size:72px;
+    font-size:70px;
     font-weight:900;
     color:white;
 }
@@ -162,7 +163,7 @@ div.stButton > button:hover{
     margin-bottom:15px;
 }
 
-/* INPUTS */
+/* INPUT */
 .stTextInput input{
     background:#0b1d13 !important;
     color:white !important;
@@ -216,70 +217,70 @@ with col6:
     if st.button("Login"):
         st.session_state.page = "Login"
 
-# ================= HOME =================
+# ================= HOME PAGE =================
 if st.session_state.page == "Home":
 
     st.markdown("""
-    <div class="hero">
+<div class="hero">
 
-        <div class="hero-title">
-            LeafSentry AI
-        </div>
+<div class="hero-title">
+LeafSentry AI
+</div>
 
-        <div class="hero-sub">
-            Smart plant disease detection powered by deep learning
-            and artificial intelligence.
-        </div>
+<div class="hero-sub">
+Smart plant disease detection powered by deep learning
+and artificial intelligence.
+</div>
 
-    </div>
-    """, unsafe_allow_html=True)
+</div>
+""", unsafe_allow_html=True)
 
     c1, c2, c3 = st.columns(3)
 
     with c1:
         st.markdown("""
-        <div class="card">
+<div class="card">
 
-            <div class="card-title">
-                🌿 Plant Monitoring
-            </div>
+<div class="card-title">
+🌿 Plant Monitoring
+</div>
 
-            <p>
-            Detect unhealthy plants instantly using image analysis.
-            </p>
+<p>
+Detect unhealthy plants instantly using image analysis.
+</p>
 
-        </div>
-        """, unsafe_allow_html=True)
+</div>
+""", unsafe_allow_html=True)
 
     with c2:
         st.markdown("""
-        <div class="card">
+<div class="card">
 
-            <div class="card-title">
-                ⚡ Fast Detection
-            </div>
+<div class="card-title">
+⚡ Fast Detection
+</div>
 
-            <p>
-            Upload leaf images and receive instant AI predictions.
-            </p>
+<p>
+Upload leaf images and receive instant AI predictions.
+</p>
 
-        </div>
-        """, unsafe_allow_html=True)
+</div>
+""", unsafe_allow_html=True)
 
     with c3:
         st.markdown("""
-        <div class="card">
+<div class="card">
 
-            <div class="card-title">
-                🧠 Deep Learning
-            </div>
+<div class="card-title">
+🧠 Deep Learning
+</div>
 
-            <p>
-            Neural network powered disease classification system.
-            </p>
+<p>
+Neural network powered disease classification system.
+</p>
 
-        </div>
-        """, unsafe_allow_html=True)
+</div>
+""", unsafe_allow_html=True)
 
 # ================= PLANT PAGE =================
 elif st.session_state.page == "Plant":
@@ -287,95 +288,97 @@ elif st.session_state.page == "Plant":
     st.title("🌱 Plant Information")
 
     st.markdown("""
-    <div class="card">
+<div class="card">
 
-        <div class="card-title">
-            Common Plant Diseases
-        </div>
+<div class="card-title">
+Common Plant Diseases
+</div>
 
-        <ul>
-            <li>Leaf Spot</li>
-            <li>Powdery Mildew</li>
-            <li>Root Rot</li>
-            <li>Rust Fungus</li>
-            <li>Bacterial Wilt</li>
-        </ul>
+<ul>
+<li>Leaf Spot</li>
+<li>Powdery Mildew</li>
+<li>Root Rot</li>
+<li>Rust Fungus</li>
+<li>Bacterial Wilt</li>
+</ul>
 
-    </div>
-    """, unsafe_allow_html=True)
+</div>
+""", unsafe_allow_html=True)
 
 # ================= BLOG PAGE =================
 elif st.session_state.page == "Blog":
 
     st.title("📰 Blog")
 
-    for i in range(1,4):
+    st.markdown("""
+<div class="card">
 
-        st.markdown(f"""
-        <div class="card">
+<div class="card-title">
+How AI Helps Modern Farming
+</div>
 
-            <div class="card-title">
-                Blog Article {i}
-            </div>
+<p>
+Artificial intelligence helps farmers detect plant diseases faster
+and improve crop quality.
+</p>
 
-            <p>
-            Learn modern agriculture techniques and disease prevention
-            strategies for healthy farming.
-            </p>
+</div>
+""", unsafe_allow_html=True)
 
-        </div>
-        """, unsafe_allow_html=True)
-
-# ================= PRIVACY =================
+# ================= PRIVACY PAGE =================
 elif st.session_state.page == "Privacy":
 
     st.title("🔒 Privacy Policy")
 
     st.markdown("""
-    <div class="card">
+<div class="card">
 
-    We do not share your uploaded images or personal account data.
+<p>
+Your uploaded images and personal information remain private
+and securely stored.
+</p>
 
-    </div>
-    """, unsafe_allow_html=True)
+</div>
+""", unsafe_allow_html=True)
 
-# ================= CONTACT =================
+# ================= CONTACT PAGE =================
 elif st.session_state.page == "Contact":
 
     st.title("📞 Contact Us")
 
     st.markdown("""
-    <div class="card">
+<div class="card">
 
-    📧 Email: leafsentry@gmail.com
+<p>
+📧 Email: leafsentry@gmail.com
+</p>
 
-    🌐 Website: www.leafsentryai.com
+<p>
+📱 Phone: +60 123-456-789
+</p>
 
-    📱 Phone: +60 123-456-789
-
-    </div>
-    """, unsafe_allow_html=True)
+</div>
+""", unsafe_allow_html=True)
 
 # ================= LOGIN PAGE =================
 elif st.session_state.page == "Login":
 
     st.markdown("""
-    <div class="card">
+<div class="card">
 
-        <div class="card-title">
-            🔐 Login To LeafSentry AI
-        </div>
+<div class="card-title">
+🔐 Login To LeafSentry AI
+</div>
 
-        <p>
-        Access your AI plant disease detection dashboard.
-        </p>
+<p>
+Access your AI plant disease detection dashboard.
+</p>
 
-    </div>
-    """, unsafe_allow_html=True)
+</div>
+""", unsafe_allow_html=True)
 
     tab1, tab2 = st.tabs(["Login", "Sign Up"])
 
-    # LOGIN
     with tab1:
 
         username = st.text_input("Username")
@@ -399,7 +402,6 @@ elif st.session_state.page == "Login":
             else:
                 st.error("Invalid Username or Password")
 
-    # SIGNUP
     with tab2:
 
         new_user = st.text_input("Create Username")
@@ -506,7 +508,6 @@ elif st.session_state.page == "ML":
 
     model = load_model()
 
-    # UPLOAD
     uploaded = st.file_uploader(
         "Upload Leaf Image",
         type=["jpg", "jpeg", "png"]
@@ -546,22 +547,22 @@ elif st.session_state.page == "ML":
         with col2:
 
             st.markdown(f"""
-            <div class="card">
+<div class="card">
 
-                <div class="card-title">
-                    Prediction Result
-                </div>
+<div class="card-title">
+Prediction Result
+</div>
 
-                <h1>
-                    {classes[pred]}
-                </h1>
+<h1>
+{classes[pred]}
+</h1>
 
-                <h3>
-                    {conf:.2f}% Confidence
-                </h3>
+<h3>
+{conf:.2f}% Confidence
+</h3>
 
-            </div>
-            """, unsafe_allow_html=True)
+</div>
+""", unsafe_allow_html=True)
 
             st.progress(int(conf))
 
