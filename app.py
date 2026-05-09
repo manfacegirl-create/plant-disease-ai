@@ -9,7 +9,7 @@ from PIL import Image
 import numpy as np
 import plotly.express as px
 
-# ================= PAGE CONFIG =================
+# ================= CONFIG =================
 st.set_page_config(
     page_title="LeafSentry AI",
     page_icon="🌿",
@@ -23,7 +23,7 @@ if "page" not in st.session_state:
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
 
-# ================= DATABASE =================
+# ================= DB =================
 conn = sqlite3.connect("users.db", check_same_thread=False)
 c = conn.cursor()
 
@@ -36,29 +36,29 @@ CREATE TABLE IF NOT EXISTS users (
 conn.commit()
 
 # ================= AUTH =================
-def hash_password(password):
-    return bcrypt.hashpw(password.encode(), bcrypt.gensalt())
+def hash_password(p):
+    return bcrypt.hashpw(p.encode(), bcrypt.gensalt())
 
-def check_password(password, hashed):
-    return bcrypt.checkpw(password.encode(), hashed)
+def check_password(p, h):
+    return bcrypt.checkpw(p.encode(), h)
 
-def strong_password(password):
-    return len(password) >= 6 and any(i.isdigit() for i in password) and any(i.isalpha() for i in password)
-
-def signup(username, password):
+def signup(u, p):
     try:
-        c.execute("INSERT INTO users VALUES (?, ?)", (username, hash_password(password)))
+        c.execute("INSERT INTO users VALUES (?,?)", (u, hash_password(p)))
         conn.commit()
         return True
     except:
         return False
 
-def login(username, password):
-    c.execute("SELECT password FROM users WHERE username=?", (username,))
+def login(u, p):
+    c.execute("SELECT password FROM users WHERE username=?", (u,))
     data = c.fetchone()
-    return data and check_password(password, data[0])
+    return data and check_password(p, data[0])
 
-# ================= CSS (GREEN NEON UI) =================
+def strong_password(p):
+    return len(p) >= 6 and any(i.isdigit() for i in p) and any(i.isalpha() for i in p)
+
+# ================= PRO CSS (SAFE STREAMLIT ONLY) =================
 st.markdown("""
 <style>
 
@@ -68,162 +68,135 @@ st.markdown("""
     color: white;
 }
 
-/* HIDE STREAMLIT UI */
+/* REMOVE STREAMLIT CLUTTER */
 #MainMenu {visibility:hidden;}
 footer {visibility:hidden;}
 header {visibility:hidden;}
 
-/* ================= NAVBAR ================= */
+/* ================= NAVBAR (ONE LINE PRO UI) ================= */
 .navbar {
     display: flex;
     justify-content: space-between;
     align-items: center;
 
-    padding: 12px 25px;
+    padding: 12px 20px;
 
-    background: rgba(10, 40, 20, 0.65);
-    backdrop-filter: blur(12px);
+    background: rgba(10, 35, 18, 0.75);
+    backdrop-filter: blur(14px);
 
     border-bottom: 1px solid rgba(34, 197, 94, 0.4);
-
     position: sticky;
     top: 0;
     z-index: 999;
 }
 
-/* TITLE IN NAVBAR */
+/* LOGO */
 .logo {
-    font-size: 24px;
+    font-size: 20px;
     font-weight: 900;
     color: #22c55e;
-    text-shadow: 0 0 10px #22c55e;
+    text-shadow: 0 0 12px #22c55e;
 }
 
-/* BUTTON ROW */
-.nav-buttons {
+/* NAV ROW = SINGLE LINE */
+.navbar-container {
     display: flex;
-    gap: 10px;
+    gap: 8px;
 }
 
-/* NAV BUTTONS */
-.nav-btn button {
+/* BUTTON FIX (NO HTML TAGS) */
+.stButton > button {
     background: transparent;
-    border: 1px solid rgba(34,197,94,0.4);
     color: #d1fae5;
-    padding: 10px 16px;
-    border-radius: 12px;
+    border: 1px solid rgba(34,197,94,0.35);
+
+    padding: 9px 14px;
+    border-radius: 10px;
+
     font-weight: 700;
-    transition: 0.3s;
+    transition: 0.25s;
+    width: 100%;
 }
 
 /* HOVER */
-.nav-btn button:hover {
-    background: rgba(34,197,94,0.2);
-    box-shadow: 0 0 12px #22c55e;
+.stButton > button:hover {
+    background: rgba(34,197,94,0.15);
+    box-shadow: 0 0 10px #22c55e;
     transform: translateY(-2px);
 }
 
-/* ACTIVE */
-.active button {
+/* ACTIVE STATE */
+.active-btn > button {
     background: #22c55e !important;
     color: black !important;
     box-shadow: 0 0 15px #22c55e;
 }
 
-/* HERO */
-.hero {
-    padding: 120px 60px;
-    border-radius: 25px;
-    margin-top: 20px;
-
-    background:
-    linear-gradient(rgba(0,0,0,0.65), rgba(0,0,0,0.85)),
-    url("https://images.unsplash.com/photo-1466692476868-aef1dfb1e735?q=80&w=2070&auto=format&fit=crop");
-
-    background-size: cover;
-}
-
-/* BIG TITLE FIX */
+/* HERO TITLE (PRO LEVEL SCALING) */
 .hero-title {
-    font-size: clamp(48px, 6vw, 90px);
+    font-size: clamp(50px, 6vw, 95px);
     font-weight: 1000;
     color: #4ade80;
     text-shadow: 0 0 25px #22c55e;
-    line-height: 1.1;
+    line-height: 1.05;
 }
 
 .hero-sub {
-    font-size: 22px;
-    max-width: 700px;
+    font-size: 20px;
     color: #d1fae5;
-    margin-top: 15px;
+    max-width: 750px;
+    margin-top: 10px;
 }
 
-/* CARDS */
+/* CARD UI */
 .card {
     background: rgba(16, 24, 39, 0.85);
-    border: 1px solid #1f5134;
-    border-radius: 20px;
-    padding: 25px;
+    border: 1px solid rgba(34,197,94,0.25);
+    border-radius: 18px;
+    padding: 22px;
     transition: 0.3s;
 }
 
 .card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 0 20px rgba(34,197,94,0.3);
+    transform: translateY(-6px);
+    box-shadow: 0 0 18px rgba(34,197,94,0.25);
 }
 
 .card-title {
     color: #4ade80;
-    font-size: 24px;
+    font-size: 22px;
     font-weight: 800;
 }
 
 </style>
 """, unsafe_allow_html=True)
 
-# ================= NAVBAR (NO PAGE SWITCHING, STATE ONLY) =================
-def nav_button(label, page):
-    active = "active" if st.session_state.page == page else ""
-    st.markdown(f'<div class="nav-btn {active}">', unsafe_allow_html=True)
-    if st.button(label, key=page):
-        st.session_state.page = page
-    st.markdown('</div>', unsafe_allow_html=True)
+# ================= NAVBAR (NO HTML OUTPUT BUG FIXED) =================
+st.markdown('<div class="navbar">', unsafe_allow_html=True)
 
-st.markdown("""
-<div class="navbar">
-    <div class="logo">🌿 LeafSentry AI</div>
-    <div class="nav-buttons">
-""", unsafe_allow_html=True)
+st.markdown('<div class="logo">🌿 LeafSentry AI</div>', unsafe_allow_html=True)
 
 cols = st.columns(6, gap="small")
+pages = ["Home", "Plant", "Blog", "Privacy", "Contact", "Login"]
 
-with cols[0]:
-    nav_button("Home", "Home")
-with cols[1]:
-    nav_button("Plant", "Plant")
-with cols[2]:
-    nav_button("Blog", "Blog")
-with cols[3]:
-    nav_button("Privacy", "Privacy")
-with cols[4]:
-    nav_button("Contact", "Contact")
-with cols[5]:
-    nav_button("Login", "Login")
+for i, p in enumerate(pages):
+    with cols[i]:
+        cls = "active-btn" if st.session_state.page == p else ""
+        st.markdown(f'<div class="{cls}">', unsafe_allow_html=True)
+        if st.button(p, key=p):
+            st.session_state.page = p
+        st.markdown("</div>", unsafe_allow_html=True)
 
-st.markdown("</div></div>", unsafe_allow_html=True)
+st.markdown("</div>", unsafe_allow_html=True)
 
 # ================= HOME =================
 if st.session_state.page == "Home":
 
     st.markdown("""
-<div class="hero">
-    <div class="hero-title">
-        LeafSentry AI
-    </div>
-
+<div style="padding:90px 40px;">
+    <div class="hero-title">LeafSentry AI</div>
     <div class="hero-sub">
-        Smart plant disease detection powered by AI and deep learning.
+        Professional AI-powered plant disease detection system.
     </div>
 </div>
 """, unsafe_allow_html=True)
@@ -231,13 +204,13 @@ if st.session_state.page == "Home":
     c1, c2, c3 = st.columns(3)
 
     with c1:
-        st.markdown("""<div class="card"><div class="card-title">🌿 Monitoring</div>Detect plant health instantly.</div>""", unsafe_allow_html=True)
+        st.markdown("""<div class="card"><div class="card-title">🌿 Monitoring</div>Real-time plant health analysis.</div>""", unsafe_allow_html=True)
 
     with c2:
-        st.markdown("""<div class="card"><div class="card-title">⚡ Fast AI</div>Instant leaf analysis.</div>""", unsafe_allow_html=True)
+        st.markdown("""<div class="card"><div class="card-title">⚡ Speed</div>Instant AI predictions.</div>""", unsafe_allow_html=True)
 
     with c3:
-        st.markdown("""<div class="card"><div class="card-title">🧠 Deep Learning</div>AI disease classification.</div>""", unsafe_allow_html=True)
+        st.markdown("""<div class="card"><div class="card-title">🧠 AI Model</div>Deep CNN classification system.</div>""", unsafe_allow_html=True)
 
 # ================= OTHER PAGES =================
 elif st.session_state.page == "Plant":
@@ -250,12 +223,12 @@ elif st.session_state.page == "Privacy":
     st.title("🔒 Privacy Policy")
 
 elif st.session_state.page == "Contact":
-    st.title("📞 Contact Us")
+    st.title("📞 Contact")
 
 # ================= LOGIN =================
 elif st.session_state.page == "Login":
 
-    st.title("🔐 Login")
+    st.title("🔐 Login System")
 
     tab1, tab2 = st.tabs(["Login", "Sign Up"])
 
@@ -268,7 +241,7 @@ elif st.session_state.page == "Login":
                 st.session_state.logged_in = True
                 st.success("Logged in")
             else:
-                st.error("Wrong credentials")
+                st.error("Invalid login")
 
     with tab2:
         nu = st.text_input("New Username")
@@ -330,7 +303,7 @@ elif st.session_state.page == "ML":
 
     model = load_model()
 
-    img = st.file_uploader("Upload Leaf Image", type=["jpg","png","jpeg"])
+    img = st.file_uploader("Upload Leaf Image", type=["jpg", "png", "jpeg"])
 
     if img:
         image = Image.open(img)
@@ -348,5 +321,5 @@ elif st.session_state.page == "ML":
 
         st.success(f"{classes[pred]} ({probs[pred]*100:.2f}%)")
 
-        fig = px.bar(x=classes, y=probs*100)
+        fig = px.bar(x=classes, y=probs * 100)
         st.plotly_chart(fig, use_container_width=True)
