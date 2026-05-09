@@ -2,14 +2,9 @@
 import streamlit as st
 import sqlite3
 import bcrypt
-import torch
-import torch.nn as nn
-from torchvision import transforms
 from PIL import Image
-import numpy as np
-import plotly.express as px
 
-# ================= CONFIG =================
+# ================= PAGE CONFIG =================
 st.set_page_config(
     page_title="LeafSentry AI",
     page_icon="🌿",
@@ -24,7 +19,11 @@ if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
 
 # ================= DATABASE =================
-conn = sqlite3.connect("users.db", check_same_thread=False)
+conn = sqlite3.connect(
+    "users.db",
+    check_same_thread=False
+)
+
 c = conn.cursor()
 
 c.execute("""
@@ -33,27 +32,43 @@ CREATE TABLE IF NOT EXISTS users (
     password BLOB
 )
 """)
+
 conn.commit()
 
 # ================= AUTH FUNCTIONS =================
 def hash_password(password):
-    return bcrypt.hashpw(password.encode(), bcrypt.gensalt())
+    return bcrypt.hashpw(
+        password.encode(),
+        bcrypt.gensalt()
+    )
 
 def check_password(password, hashed):
-    return bcrypt.checkpw(password.encode(), hashed)
+    return bcrypt.checkpw(
+        password.encode(),
+        hashed
+    )
 
 def signup(username, password):
+
     try:
+
         c.execute(
-            "INSERT INTO users VALUES (?,?)",
-            (username, hash_password(password))
+            "INSERT INTO users VALUES (?, ?)",
+            (
+                username,
+                hash_password(password)
+            )
         )
+
         conn.commit()
+
         return True
+
     except:
         return False
 
 def login(username, password):
+
     c.execute(
         "SELECT password FROM users WHERE username=?",
         (username,)
@@ -62,11 +77,15 @@ def login(username, password):
     data = c.fetchone()
 
     if data:
-        return check_password(password, data[0])
+        return check_password(
+            password,
+            data[0]
+        )
 
     return False
 
 def strong_password(password):
+
     return (
         len(password) >= 6
         and any(i.isdigit() for i in password)
@@ -85,6 +104,7 @@ html, body, [class*="css"] {
 
 /* BACKGROUND */
 .stApp {
+
     background: linear-gradient(
         180deg,
         #eaf7ee 0%,
@@ -108,20 +128,22 @@ header {
     visibility: hidden;
 }
 
+/* REMOVE TOP SPACE */
+.block-container {
+    padding-top: 1rem !important;
+}
+
 /* ================= NAVBAR ================= */
 
 .navbar-wrap {
 
     background: rgba(34, 85, 55, 0.95);
 
-    padding-top: 18px;
-    padding-bottom: 18px;
-    padding-left: 30px;
-    padding-right: 30px;
+    padding: 18px 30px;
 
-    border-radius: 0px;
+    border-radius: 18px;
 
-    margin-bottom: 30px;
+    margin-bottom: 20px;
 }
 
 /* LOGO */
@@ -133,12 +155,13 @@ header {
 
     color: white;
 
-    margin-bottom: 18px;
+    margin-bottom: 15px;
 }
 
 /* FIX COLUMN SPACING */
 div[data-testid="stHorizontalBlock"] {
-    gap: 0.8rem !important;
+
+    gap: 1rem !important;
 }
 
 /* BUTTONS */
@@ -154,8 +177,7 @@ div[data-testid="stHorizontalBlock"] {
 
     border-radius: 14px;
 
-    padding-top: 12px;
-    padding-bottom: 12px;
+    padding: 12px 0;
 
     font-weight: 700;
 
@@ -174,22 +196,14 @@ div[data-testid="stHorizontalBlock"] {
     box-shadow: 0px 4px 12px rgba(0,0,0,0.15);
 }
 
-/* ACTIVE BUTTON */
-.active-btn button {
-
-    background: #48a868 !important;
-
-    color: white !important;
-}
-
 /* ================= HERO ================= */
 
 .hero {
 
     margin-top: 10px;
 
-    padding-top: 120px;
-    padding-bottom: 120px;
+    padding-top: 80px;
+    padding-bottom: 80px;
 
     padding-left: 55px;
     padding-right: 55px;
@@ -239,7 +253,7 @@ div[data-testid="stHorizontalBlock"] {
 
 .card {
 
-    background: rgba(255,255,255,0.85);
+    background: rgba(255,255,255,0.90);
 
     border: 1px solid #bde7c8;
 
@@ -293,7 +307,8 @@ div[data-testid="stHorizontalBlock"] {
     border-radius: 10px !important;
 }
 
-/* FILE UPLOADER */
+/* ================= FILE UPLOADER ================= */
+
 section[data-testid="stFileUploader"] {
 
     background: #f6fff8;
@@ -303,12 +318,6 @@ section[data-testid="stFileUploader"] {
     padding: 20px;
 
     border-radius: 15px;
-}
-
-/* TITLES */
-h1, h2, h3 {
-
-    color: #1e5631;
 }
 
 </style>
@@ -341,22 +350,9 @@ for i, page in enumerate(pages):
 
     with cols[i]:
 
-        active = st.session_state.page == page
-
-        if active:
-            st.markdown(
-                '<div class="active-btn">',
-                unsafe_allow_html=True
-            )
-
         if st.button(page, key=page):
-            st.session_state.page = page
 
-        if active:
-            st.markdown(
-                '</div>',
-                unsafe_allow_html=True
-            )
+            st.session_state.page = page
 
 st.markdown(
     '</div>',
@@ -445,12 +441,12 @@ elif st.session_state.page == "Plant":
     st.title("🌱 Plant Information")
 
     st.write(
-        "Upload plant images and analyze crop health."
+        "Upload plant images for AI disease analysis."
     )
 
     uploaded = st.file_uploader(
         "Upload Plant Image",
-        type=["jpg", "png", "jpeg"]
+        type=["jpg", "jpeg", "png"]
     )
 
     if uploaded:
@@ -459,12 +455,12 @@ elif st.session_state.page == "Plant":
 
         st.image(
             image,
-            caption="Uploaded Plant",
+            caption="Uploaded Plant Image",
             use_container_width=True
         )
 
         st.success(
-            "AI analysis ready."
+            "Plant image uploaded successfully."
         )
 
 # ================= BLOG PAGE =================
@@ -484,7 +480,7 @@ elif st.session_state.page == "Privacy":
     st.title("🔒 Privacy Policy")
 
     st.write(
-        "Your uploaded images and data are protected."
+        "Your uploaded images and account information are protected."
     )
 
 # ================= CONTACT PAGE =================
@@ -508,7 +504,7 @@ elif st.session_state.page == "Login":
         "Sign Up"
     ])
 
-    # LOGIN TAB
+    # LOGIN
     with tab1:
 
         username = st.text_input(
@@ -536,7 +532,7 @@ elif st.session_state.page == "Login":
                     "Invalid username or password."
                 )
 
-    # SIGNUP TAB
+    # SIGN UP
     with tab2:
 
         new_user = st.text_input(
@@ -567,5 +563,5 @@ elif st.session_state.page == "Login":
             else:
 
                 st.warning(
-                    "Password must contain letters, numbers, and be at least 6 characters."
+                    "Password must contain letters and numbers and be at least 6 characters."
                 )
