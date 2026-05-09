@@ -18,6 +18,9 @@ if "page" not in st.session_state:
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
 
+if "username" not in st.session_state:
+    st.session_state.username = ""
+
 # ================= DATABASE =================
 conn = sqlite3.connect(
     "users.db",
@@ -92,7 +95,7 @@ def strong_password(password):
         and any(i.isalpha() for i in password)
     )
 
-# ================= CUSTOM CSS =================
+# ================= CSS =================
 st.markdown("""
 <style>
 
@@ -104,18 +107,10 @@ html, body, [class*="css"] {
 
 /* BACKGROUND */
 .stApp {
-
-    background: linear-gradient(
-        180deg,
-        #eaf7ee 0%,
-        #dff3e4 50%,
-        #cdebd6 100%
-    );
-
-    color: #12301d;
+    background: #dfeee2;
 }
 
-/* HIDE STREAMLIT DEFAULT */
+/* REMOVE STREAMLIT UI */
 #MainMenu {
     visibility: hidden;
 }
@@ -128,92 +123,76 @@ header {
     visibility: hidden;
 }
 
-/* REMOVE TOP SPACE */
+/* REMOVE TOP PADDING */
 .block-container {
-    padding-top: 1rem !important;
+    padding-top: 1rem;
+    padding-bottom: 2rem;
 }
 
 /* ================= NAVBAR ================= */
 
-.navbar-wrap {
-
-    background: rgba(34, 85, 55, 0.95);
-
-    padding: 18px 30px;
-
+.navbar {
+    background: #204d34;
+    padding: 18px 25px;
     border-radius: 18px;
-
-    margin-bottom: 20px;
+    margin-bottom: 25px;
 }
 
 /* LOGO */
 .logo {
-
-    font-size: 34px;
-
-    font-weight: 900;
-
     color: white;
-
+    font-size: 34px;
+    font-weight: 900;
     margin-bottom: 15px;
 }
 
-/* FIX COLUMN SPACING */
+/* BUTTON SPACING */
 div[data-testid="stHorizontalBlock"] {
-
-    gap: 1rem !important;
+    gap: 0.8rem;
 }
 
-/* BUTTONS */
+/* NAV BUTTONS */
 .stButton > button {
 
     width: 100%;
 
-    background: transparent;
+    background: white;
 
-    color: #18442a;
+    color: #204d34;
 
-    border: 2px solid #48a868;
+    border: 2px solid #3fa466;
 
     border-radius: 14px;
 
-    padding: 12px 0;
+    padding: 10px 0;
 
     font-weight: 700;
 
-    transition: 0.25s;
+    transition: 0.2s;
 }
 
 /* HOVER */
 .stButton > button:hover {
 
-    background: #48a868;
+    background: #3fa466;
 
     color: white;
 
     transform: translateY(-2px);
-
-    box-shadow: 0px 4px 12px rgba(0,0,0,0.15);
 }
 
 /* ================= HERO ================= */
 
 .hero {
 
-    margin-top: 10px;
-
-    padding-top: 80px;
-    padding-bottom: 80px;
-
-    padding-left: 55px;
-    padding-right: 55px;
+    padding: 90px 60px;
 
     border-radius: 28px;
 
     background:
     linear-gradient(
-        rgba(0,50,20,0.55),
-        rgba(0,20,10,0.75)
+        rgba(0,0,0,0.45),
+        rgba(0,0,0,0.55)
     ),
 
     url("https://images.unsplash.com/photo-1523348837708-15d4a09cfac2?q=80&w=2070&auto=format&fit=crop");
@@ -222,76 +201,72 @@ div[data-testid="stHorizontalBlock"] {
 
     background-position: center;
 
-    margin-bottom: 28px;
+    margin-bottom: 30px;
 }
 
-/* HERO TITLE */
+/* TITLE */
 .hero-title {
 
-    font-size: clamp(58px, 7vw, 95px);
+    font-size: 82px;
 
     font-weight: 1000;
 
-    color: #ffffff;
+    color: white;
 
-    line-height: 1.1;
+    margin-bottom: 15px;
 }
 
-/* HERO SUBTEXT */
+/* SUBTITLE */
 .hero-sub {
+
+    color: #ecfff1;
 
     font-size: 22px;
 
-    color: #ddffe5;
-
-    max-width: 760px;
-
-    margin-top: 16px;
+    max-width: 700px;
 }
 
 /* ================= CARDS ================= */
 
 .card {
 
-    background: rgba(255,255,255,0.90);
+    background: white;
 
-    border: 1px solid #bde7c8;
-
-    border-radius: 22px;
+    border-radius: 24px;
 
     padding: 28px;
 
-    transition: 0.3s;
-
     min-height: 180px;
+
+    box-shadow: 0px 5px 15px rgba(0,0,0,0.08);
+
+    transition: 0.25s;
 }
 
 /* CARD HOVER */
 .card:hover {
 
-    transform: translateY(-6px);
-
-    box-shadow: 0px 10px 22px rgba(46,125,70,0.25);
+    transform: translateY(-5px);
 }
 
 /* CARD TITLE */
 .card-title {
 
-    color: #2f6f46;
-
-    font-size: 28px;
+    font-size: 30px;
 
     font-weight: 900;
 
-    margin-bottom: 14px;
+    color: #204d34;
+
+    margin-bottom: 12px;
 }
 
 /* CARD TEXT */
 .card-text {
 
-    font-size: 17px;
+    color: #2f4f38;
 
-    color: #23452e;
+    font-size: 17px;
 
     line-height: 1.7;
 }
@@ -300,24 +275,23 @@ div[data-testid="stHorizontalBlock"] {
 
 .stTextInput input {
 
-    background: #f4fff7 !important;
+    border-radius: 12px;
 
-    border: 1px solid #bde7c8 !important;
+    border: 1px solid #9fd3b2;
 
-    border-radius: 10px !important;
+    background: white;
 }
 
-/* ================= FILE UPLOADER ================= */
-
+/* FILE UPLOADER */
 section[data-testid="stFileUploader"] {
 
-    background: #f6fff8;
-
-    border: 1px solid #bde7c8;
+    background: white;
 
     padding: 20px;
 
-    border-radius: 15px;
+    border-radius: 18px;
+
+    border: 1px solid #cce8d5;
 }
 
 </style>
@@ -326,12 +300,7 @@ section[data-testid="stFileUploader"] {
 # ================= NAVBAR =================
 
 st.markdown(
-    '<div class="navbar-wrap">',
-    unsafe_allow_html=True
-)
-
-st.markdown(
-    '<div class="logo">🌿 LeafSentry AI</div>',
+    '<div class="navbar"><div class="logo">🌿 LeafSentry AI</div></div>',
     unsafe_allow_html=True
 )
 
@@ -350,16 +319,11 @@ for i, page in enumerate(pages):
 
     with cols[i]:
 
-        if st.button(page, key=page):
+        if st.button(page):
 
             st.session_state.page = page
 
-st.markdown(
-    '</div>',
-    unsafe_allow_html=True
-)
-
-# ================= HOME PAGE =================
+# ================= HOME =================
 
 if st.session_state.page == "Home":
 
@@ -380,7 +344,6 @@ if st.session_state.page == "Home":
 
     c1, c2, c3 = st.columns(3)
 
-    # CARD 1
     with c1:
 
         st.markdown("""
@@ -391,14 +354,12 @@ if st.session_state.page == "Home":
             </div>
 
             <div class="card-text">
-                Detect plant diseases instantly using
-                advanced AI-powered crop monitoring.
+                Detect plant diseases instantly using AI-powered monitoring.
             </div>
 
         </div>
         """, unsafe_allow_html=True)
 
-    # CARD 2
     with c2:
 
         st.markdown("""
@@ -409,14 +370,12 @@ if st.session_state.page == "Home":
             </div>
 
             <div class="card-text">
-                Ultra-fast predictions with real-time
-                plant health analysis and insights.
+                Fast and real-time predictions for crop health analysis.
             </div>
 
         </div>
         """, unsafe_allow_html=True)
 
-    # CARD 3
     with c3:
 
         st.markdown("""
@@ -427,8 +386,7 @@ if st.session_state.page == "Home":
             </div>
 
             <div class="card-text">
-                Deep learning classification model
-                trained for accurate disease detection.
+                Deep learning model trained for accurate plant disease classification.
             </div>
 
         </div>
@@ -438,62 +396,81 @@ if st.session_state.page == "Home":
 
 elif st.session_state.page == "Plant":
 
-    st.title("🌱 Plant Information")
+    st.title("🌱 Plant Disease Detection")
 
-    st.write(
-        "Upload plant images for AI disease analysis."
-    )
+    # ================= LOGIN REQUIRED =================
 
-    uploaded = st.file_uploader(
-        "Upload Plant Image",
-        type=["jpg", "jpeg", "png"]
-    )
+    if not st.session_state.logged_in:
 
-    if uploaded:
+        st.error("You must login first to use the AI model.")
 
-        image = Image.open(uploaded)
+        st.info("Go to the Login page to continue.")
 
-        st.image(
-            image,
-            caption="Uploaded Plant Image",
-            use_container_width=True
-        )
+    else:
 
         st.success(
-            "Plant image uploaded successfully."
+            f"Welcome {st.session_state.username}"
         )
 
-# ================= BLOG PAGE =================
+        uploaded = st.file_uploader(
+            "Upload Plant Image",
+            type=["jpg", "jpeg", "png"]
+        )
+
+        if uploaded:
+
+            image = Image.open(uploaded)
+
+            st.image(
+                image,
+                caption="Uploaded Plant Image",
+                use_container_width=True
+            )
+
+            # ================= DUMMY ML RESULT =================
+            # Replace with your real ML model later
+
+            st.success(
+                "Prediction Complete"
+            )
+
+            st.write("### 🌿 Prediction Result")
+            st.write("Healthy Plant")
+
+            st.write("### 📊 Confidence")
+            st.progress(95)
+
+# ================= BLOG =================
 
 elif st.session_state.page == "Blog":
 
     st.title("📰 Blog")
 
     st.write(
-        "Latest agricultural AI news and updates."
+        "Latest updates about smart farming and AI."
     )
 
-# ================= PRIVACY PAGE =================
+# ================= PRIVACY =================
 
 elif st.session_state.page == "Privacy":
 
     st.title("🔒 Privacy Policy")
 
     st.write(
-        "Your uploaded images and account information are protected."
+        "Your uploaded data is protected securely."
     )
 
-# ================= CONTACT PAGE =================
+# ================= CONTACT =================
 
 elif st.session_state.page == "Contact":
 
-    st.title("📞 Contact Us")
+    st.title("📞 Contact")
 
     st.write(
-        "Email: support@leafsentry.ai"
+        "support@leafsentry.ai"
     )
 
-# ================= LOGIN PAGE =================
+# ================= LOGIN =================
 
 elif st.session_state.page == "Login":
 
@@ -504,7 +481,8 @@ elif st.session_state.page == "Login":
         "Sign Up"
     ])
 
-    # LOGIN
+    # ================= LOGIN TAB =================
+
     with tab1:
 
         username = st.text_input(
@@ -522,17 +500,20 @@ elif st.session_state.page == "Login":
 
                 st.session_state.logged_in = True
 
+                st.session_state.username = username
+
                 st.success(
-                    "Login successful."
+                    "Login successful"
                 )
 
             else:
 
                 st.error(
-                    "Invalid username or password."
+                    "Invalid username or password"
                 )
 
-    # SIGN UP
+    # ================= SIGNUP TAB =================
+
     with tab2:
 
         new_user = st.text_input(
@@ -551,17 +532,17 @@ elif st.session_state.page == "Login":
                 if signup(new_user, new_pass):
 
                     st.success(
-                        "Account created successfully."
+                        "Account created successfully"
                     )
 
                 else:
 
                     st.error(
-                        "Username already exists."
+                        "Username already exists"
                     )
 
             else:
 
                 st.warning(
-                    "Password must contain letters and numbers and be at least 6 characters."
+                    "Password must contain letters, numbers, and be at least 6 characters."
                 )
