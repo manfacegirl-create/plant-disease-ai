@@ -40,12 +40,14 @@ conn.commit()
 
 # ================= AUTH FUNCTIONS =================
 def hash_password(password):
+
     return bcrypt.hashpw(
         password.encode(),
         bcrypt.gensalt()
     )
 
 def check_password(password, hashed):
+
     return bcrypt.checkpw(
         password.encode(),
         hashed
@@ -80,6 +82,7 @@ def login(username, password):
     data = c.fetchone()
 
     if data:
+
         return check_password(
             password,
             data[0]
@@ -99,15 +102,23 @@ def strong_password(password):
 st.markdown("""
 <style>
 
-/* APP BACKGROUND */
+/* BACKGROUND */
 .stApp {
     background-color: #dfeee2;
 }
 
-/* REMOVE STREAMLIT UI */
-#MainMenu {visibility: hidden;}
-footer {visibility: hidden;}
-header {visibility: hidden;}
+/* REMOVE STREAMLIT DEFAULT */
+#MainMenu {
+    visibility: hidden;
+}
+
+footer {
+    visibility: hidden;
+}
+
+header {
+    visibility: hidden;
+}
 
 /* REMOVE TOP SPACE */
 .block-container {
@@ -116,16 +127,23 @@ header {visibility: hidden;}
 
 /* NAVBAR */
 .navbar {
+
     background-color: #204d34;
+
     padding: 20px;
+
     border-radius: 18px;
+
     margin-bottom: 25px;
 }
 
 /* LOGO */
 .logo {
+
     color: white;
+
     font-size: 36px;
+
     font-weight: bold;
 }
 
@@ -155,84 +173,10 @@ header {visibility: hidden;}
     color: white;
 }
 
-/* HERO */
-.hero-box {
-
-    background-image:
-    linear-gradient(
-        rgba(0,0,0,0.5),
-        rgba(0,0,0,0.5)
-    ),
-    url("https://images.unsplash.com/photo-1523348837708-15d4a09cfac2?q=80&w=2070&auto=format&fit=crop");
-
-    background-size: cover;
-
-    background-position: center;
-
-    padding: 100px 60px;
-
-    border-radius: 25px;
-
-    margin-bottom: 30px;
-}
-
-/* HERO TITLE */
-.hero-title {
-
-    color: white;
-
-    font-size: 75px;
-
-    font-weight: bold;
-}
-
-/* HERO TEXT */
-.hero-text {
-
-    color: white;
-
-    font-size: 24px;
-}
-
-/* CARD */
-.card {
-
-    background-color: white;
-
-    padding: 30px;
-
-    border-radius: 22px;
-
-    box-shadow: 0px 4px 12px rgba(0,0,0,0.1);
-
-    min-height: 180px;
-}
-
-/* CARD TITLE */
-.card-title {
-
-    color: black;
-
-    font-size: 30px;
-
-    font-weight: bold;
-
-    margin-bottom: 10px;
-}
-
-/* CARD TEXT */
-.card-text {
-
-    color: black;
-
-    font-size: 18px;
-}
-
 </style>
 """, unsafe_allow_html=True)
 
 # ================= NAVBAR =================
-
 st.markdown("""
 <div class="navbar">
     <div class="logo">
@@ -241,6 +185,7 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
+# ================= NAVIGATION =================
 pages = [
     "Home",
     "Plant",
@@ -257,86 +202,142 @@ for i, page in enumerate(pages):
     with cols[i]:
 
         if st.button(page):
+
             st.session_state.page = page
 
 # ================= HOME PAGE =================
-
 if st.session_state.page == "Home":
 
-    # IMPORTANT:
-    # THIS FIXES THE HTML SHOWING ISSUE
+    # HERO IMAGE
+    st.image(
+        "https://images.unsplash.com/photo-1523348837708-15d4a09cfac2?q=80&w=2070&auto=format&fit=crop",
+        use_container_width=True
+    )
 
+    # TITLE
     st.markdown(
         """
-        <div class="hero-box">
-
-            <div class="hero-title">
-                LeafSentry AI
-            </div>
-
-            <div class="hero-text">
-                Smart AI system for plant disease detection
-                and crop health monitoring.
-            </div>
-
-        </div>
+        <h1 style='
+            color:black;
+            font-size:70px;
+            font-weight:900;
+            margin-top:-250px;
+            padding-left:40px;
+        '>
+            LeafSentry AI
+        </h1>
         """,
         unsafe_allow_html=True
     )
 
+    # SUBTITLE
+    st.markdown(
+        """
+        <p style='
+            color:black;
+            font-size:24px;
+            font-weight:600;
+            padding-left:40px;
+            margin-bottom:180px;
+        '>
+            Smart AI system for plant disease detection
+            and crop health monitoring.
+        </p>
+        """,
+        unsafe_allow_html=True
+    )
+
+    # ================= CARDS =================
+
     c1, c2, c3 = st.columns(3)
 
+    # CARD 1
     with c1:
 
         st.markdown(
             """
-            <div class="card">
+            <div style="
+                background:white;
+                padding:30px;
+                border-radius:20px;
+                box-shadow:0px 4px 10px rgba(0,0,0,0.1);
+            ">
 
-                <div class="card-title">
+                <h2 style="
+                    color:black;
+                    font-weight:900;
+                ">
                     🌿 Monitoring
-                </div>
+                </h2>
 
-                <div class="card-text">
+                <p style="
+                    color:black;
+                    font-size:18px;
+                ">
                     Detect plant diseases instantly using AI monitoring.
-                </div>
+                </p>
 
             </div>
             """,
             unsafe_allow_html=True
         )
 
+    # CARD 2
     with c2:
 
         st.markdown(
             """
-            <div class="card">
+            <div style="
+                background:white;
+                padding:30px;
+                border-radius:20px;
+                box-shadow:0px 4px 10px rgba(0,0,0,0.1);
+            ">
 
-                <div class="card-title">
+                <h2 style="
+                    color:black;
+                    font-weight:900;
+                ">
                     ⚡ Speed
-                </div>
+                </h2>
 
-                <div class="card-text">
+                <p style="
+                    color:black;
+                    font-size:18px;
+                ">
                     Fast real-time crop health predictions.
-                </div>
+                </p>
 
             </div>
             """,
             unsafe_allow_html=True
         )
 
+    # CARD 3
     with c3:
 
         st.markdown(
             """
-            <div class="card">
+            <div style="
+                background:white;
+                padding:30px;
+                border-radius:20px;
+                box-shadow:0px 4px 10px rgba(0,0,0,0.1);
+            ">
 
-                <div class="card-title">
+                <h2 style="
+                    color:black;
+                    font-weight:900;
+                ">
                     🧠 AI Model
-                </div>
+                </h2>
 
-                <div class="card-text">
+                <p style="
+                    color:black;
+                    font-size:18px;
+                ">
                     Deep learning model for disease classification.
-                </div>
+                </p>
 
             </div>
             """,
@@ -344,11 +345,11 @@ if st.session_state.page == "Home":
         )
 
 # ================= PLANT PAGE =================
-
 elif st.session_state.page == "Plant":
 
     st.title("🌱 Plant Disease Detection")
 
+    # LOGIN REQUIRED
     if not st.session_state.logged_in:
 
         st.error(
@@ -376,6 +377,7 @@ elif st.session_state.page == "Plant":
                 use_container_width=True
             )
 
+            # DUMMY RESULT
             st.success("Prediction Complete")
 
             st.write("### Prediction Result")
@@ -384,8 +386,7 @@ elif st.session_state.page == "Plant":
             st.write("### Confidence")
             st.progress(95)
 
-# ================= BLOG =================
-
+# ================= BLOG PAGE =================
 elif st.session_state.page == "Blog":
 
     st.title("📰 Blog")
@@ -394,8 +395,7 @@ elif st.session_state.page == "Blog":
         "Latest AI farming updates."
     )
 
-# ================= PRIVACY =================
-
+# ================= PRIVACY PAGE =================
 elif st.session_state.page == "Privacy":
 
     st.title("🔒 Privacy Policy")
@@ -404,8 +404,7 @@ elif st.session_state.page == "Privacy":
         "Your data is securely protected."
     )
 
-# ================= CONTACT =================
-
+# ================= CONTACT PAGE =================
 elif st.session_state.page == "Contact":
 
     st.title("📞 Contact")
@@ -414,8 +413,7 @@ elif st.session_state.page == "Contact":
         "support@leafsentry.ai"
     )
 
-# ================= LOGIN =================
-
+# ================= LOGIN PAGE =================
 elif st.session_state.page == "Login":
 
     st.title("🔐 Login System")
