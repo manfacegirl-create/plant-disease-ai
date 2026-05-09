@@ -80,142 +80,91 @@ if "page" not in st.session_state:
     st.session_state.page = "Home"
 
 # ================= CSS =================
+# ================= NAVBAR CSS =================
 st.markdown("""
 <style>
 
-/* MAIN */
-.stApp{
-    background:#08130d;
-    color:white;
+/* NAVBAR CONTAINER */
+.navbar{
+    background:#15803d;
+    padding:0px;
+    margin-bottom:25px;
+    border-radius:0px;
+    overflow:hidden;
 }
 
-/* HIDE STREAMLIT */
-#MainMenu {visibility:hidden;}
-footer {visibility:hidden;}
-header {visibility:hidden;}
+/* REMOVE COLUMN GAPS */
+div[data-testid="column"]{
+    padding:0 !important;
+}
 
-/* NAVBAR BUTTONS */
+/* NAV BUTTONS */
 div.stButton > button{
     width:100%;
-    height:70px;
+    height:75px;
+
     background:#15803d;
     color:white;
+
     border:none;
     border-radius:0px;
-    font-size:18px;
+
+    font-size:20px;
     font-weight:700;
+
     transition:0.3s;
+
+    margin:0 !important;
 }
 
+/* HOVER */
 div.stButton > button:hover{
     background:#e5e7eb;
     color:#15803d;
 }
 
-/* HERO SECTION */
-.hero{
-    background:
-    linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.75)),
-    url("https://images.unsplash.com/photo-1466692476868-aef1dfb1e735?q=80&w=2070&auto=format&fit=crop");
-
-    background-size:cover;
-    background-position:center;
-
-    padding:100px 70px;
-    border-radius:25px;
-
-    margin-top:20px;
-    margin-bottom:30px;
-}
-
-.hero-title{
-    font-size:70px;
-    font-weight:900;
-    color:white;
-}
-
-.hero-sub{
-    font-size:22px;
-    color:#d1fae5;
-    margin-top:20px;
-    max-width:700px;
-}
-
-/* CARDS */
-.card{
-    background:#101827;
-    border:1px solid #1f5134;
-    border-radius:20px;
-    padding:30px;
-    margin-top:20px;
-    transition:0.3s;
-}
-
-.card:hover{
-    transform:translateY(-5px);
-    box-shadow:0 0 20px rgba(74,222,128,0.2);
-}
-
-.card-title{
-    color:#4ade80;
-    font-size:28px;
-    font-weight:700;
-    margin-bottom:15px;
-}
-
-/* INPUT */
-.stTextInput input{
-    background:#0b1d13 !important;
-    color:white !important;
-    border:1px solid #1f5134 !important;
-    border-radius:10px !important;
-}
-
-/* FILE UPLOADER */
-section[data-testid="stFileUploader"]{
-    background:#101827;
-    border:1px solid #1f5134;
-    padding:20px;
-    border-radius:15px;
-}
-
-/* FOOTER */
-.footer{
-    text-align:center;
-    margin-top:60px;
-    padding:30px;
-    color:#a7f3d0;
+/* ACTIVE EFFECT */
+div.stButton > button:focus{
+    background:#e5e7eb !important;
+    color:#15803d !important;
+    box-shadow:none !important;
 }
 
 </style>
 """, unsafe_allow_html=True)
 
 # ================= NAVBAR =================
-col1, col2, col3, col4, col5, col6 = st.columns([1,1,1,1.5,1.3,1])
+st.markdown('<div class="navbar">', unsafe_allow_html=True)
 
-with col1:
+nav1, nav2, nav3, nav4, nav5, nav6 = st.columns(
+    [1,1,1,1.5,1.3,1]
+)
+
+with nav1:
     if st.button("Home"):
         st.session_state.page = "Home"
 
-with col2:
+with nav2:
     if st.button("Plant"):
         st.session_state.page = "Plant"
 
-with col3:
+with nav3:
     if st.button("Blog"):
         st.session_state.page = "Blog"
 
-with col4:
+with nav4:
     if st.button("Privacy Policy"):
         st.session_state.page = "Privacy"
 
-with col5:
+with nav5:
     if st.button("Contact Us"):
         st.session_state.page = "Contact"
 
-with col6:
+with nav6:
     if st.button("Login"):
         st.session_state.page = "Login"
+
+st.markdown('</div>', unsafe_allow_html=True)
 
 # ================= HOME PAGE =================
 if st.session_state.page == "Home":
