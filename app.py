@@ -58,7 +58,7 @@ def login(u, p):
 def strong_password(p):
     return len(p) >= 6 and any(i.isdigit() for i in p) and any(i.isalpha() for i in p)
 
-# ================= 🌿 CLEAN PLANT THEME CSS =================
+# ================= 🌿 CLEAN GREEN THEME =================
 st.markdown("""
 <style>
 
@@ -68,19 +68,19 @@ st.markdown("""
     color: #12301d;
 }
 
-/* STREAMLIT CLEANUP */
+/* HIDE STREAMLIT DEFAULT UI */
 #MainMenu {visibility:hidden;}
 footer {visibility:hidden;}
 header {visibility:hidden;}
 
-/* ================= NAVBAR ================= */
+/* ================= NAVBAR FIX ================= */
 .navbar {
     display: flex;
     justify-content: space-between;
     align-items: center;
 
-    padding: 14px 20px;
-    background: rgba(34, 85, 55, 0.92);
+    padding: 14px 22px;
+    background: rgba(34, 85, 55, 0.95);
 
     border-bottom: 2px solid #2f6f46;
 
@@ -91,9 +91,17 @@ header {visibility:hidden;}
 
 /* LOGO */
 .logo {
-    font-size: 22px;
+    font-size: 24px;
     font-weight: 900;
     color: #eafff0;
+    white-space: nowrap;
+}
+
+/* BUTTON STYLE (FOR STREAMLIT BUTTONS INSIDE NAVBAR) */
+div[data-testid="column"] {
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 /* BUTTONS */
@@ -104,7 +112,7 @@ header {visibility:hidden;}
     border: 1px solid #4caf72;
     border-radius: 12px;
 
-    padding: 9px 14px;
+    padding: 8px 14px;
     font-weight: 700;
 
     width: 100%;
@@ -114,8 +122,8 @@ header {visibility:hidden;}
 /* HOVER */
 .stButton > button:hover {
     background: #3f8f5c;
-    box-shadow: 0 0 10px rgba(76,175,114,0.4);
     transform: translateY(-2px);
+    box-shadow: 0 0 10px rgba(76,175,114,0.3);
 }
 
 /* ACTIVE */
@@ -125,11 +133,10 @@ header {visibility:hidden;}
     font-weight: 900;
 }
 
-/* ================= HERO (FIXED POSITION) ================= */
+/* HERO */
 .hero {
-    margin-top: 30px;   /* 🔥 FIXED SPACING */
+    margin-top: 25px;
     padding: 95px 55px;
-
     border-radius: 25px;
 
     background:
@@ -140,15 +147,12 @@ header {visibility:hidden;}
     background-position: center;
 }
 
-/* BIG TITLE FIX */
 .hero-title {
     font-size: clamp(50px, 6vw, 92px);
     font-weight: 1000;
     color: #eafff0;
-    line-height: 1.1;
 }
 
-/* SUBTITLE */
 .hero-sub {
     font-size: 20px;
     color: #d7f7df;
@@ -156,9 +160,9 @@ header {visibility:hidden;}
     margin-top: 12px;
 }
 
-/* ================= CARDS ================= */
+/* CARDS */
 .card {
-    background: rgba(255,255,255,0.80);
+    background: rgba(255,255,255,0.85);
     border: 1px solid #bde7c8;
     border-radius: 18px;
     padding: 22px;
@@ -181,7 +185,6 @@ header {visibility:hidden;}
     background: #f4fff7 !important;
     border: 1px solid #bde7c8 !important;
     border-radius: 10px !important;
-    color: #12301d !important;
 }
 
 /* FILE UPLOADER */
@@ -195,25 +198,24 @@ section[data-testid="stFileUploader"] {
 </style>
 """, unsafe_allow_html=True)
 
-# ================= NAVBAR (FIXED STRUCTURE) =================
-col_logo, c1, c2, c3, c4, c5, c6 = st.columns([2,1,1,1,1,1,1])
+# ================= NAVBAR =================
+st.markdown('<div class="navbar">', unsafe_allow_html=True)
 
-with col_logo:
-    st.markdown('<div class="logo">🌿 LeafSentry AI</div>', unsafe_allow_html=True)
+st.markdown('<div class="logo">🌿 LeafSentry AI</div>', unsafe_allow_html=True)
 
 pages = ["Home", "Plant", "Blog", "Privacy", "Contact", "Login"]
-cols = [c1, c2, c3, c4, c5, c6]
+cols = st.columns(len(pages))
 
 for i, p in enumerate(pages):
     with cols[i]:
         if st.session_state.page == p:
-            st.markdown('<div class="active-btn">', unsafe_allow_html=True)
-            if st.button(p, key=p):
+            if st.button(p, key=f"active_{p}"):
                 st.session_state.page = p
-            st.markdown("</div>", unsafe_allow_html=True)
         else:
             if st.button(p, key=p):
                 st.session_state.page = p
+
+st.markdown('</div>', unsafe_allow_html=True)
 
 # ================= HOME =================
 if st.session_state.page == "Home":
@@ -230,15 +232,15 @@ if st.session_state.page == "Home":
     c1, c2, c3 = st.columns(3)
 
     with c1:
-        st.markdown("""<div class="card"><div class="card-title">🌿 Monitoring</div>Detect plant health instantly.</div>""", unsafe_allow_html=True)
+        st.markdown('<div class="card"><div class="card-title">🌿 Monitoring</div>Detect plant health instantly.</div>', unsafe_allow_html=True)
 
     with c2:
-        st.markdown("""<div class="card"><div class="card-title">⚡ Speed</div>Fast AI predictions.</div>""", unsafe_allow_html=True)
+        st.markdown('<div class="card"><div class="card-title">⚡ Speed</div>Fast AI predictions.</div>', unsafe_allow_html=True)
 
     with c3:
-        st.markdown("""<div class="card"><div class="card-title">🧠 AI Model</div>Deep learning classification.</div>""", unsafe_allow_html=True)
+        st.markdown('<div class="card"><div class="card-title">🧠 AI Model</div>Deep learning classification.</div>', unsafe_allow_html=True)
 
-# ================= OTHER PAGES =================
+# ================= PAGES =================
 elif st.session_state.page == "Plant":
     st.title("🌱 Plant Information")
 
