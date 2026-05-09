@@ -16,6 +16,16 @@ st.set_page_config(
     layout="wide"
 )
 
+# ================= ROUTING (NEW SYSTEM) =================
+query_params = st.query_params
+page = query_params.get("page", "Home")
+
+if isinstance(page, list):
+    page = page[0]
+
+if "logged_in" not in st.session_state:
+    st.session_state.logged_in = False
+
 # ================= DATABASE =================
 conn = sqlite3.connect("users.db", check_same_thread=False)
 c = conn.cursor()
@@ -26,10 +36,9 @@ CREATE TABLE IF NOT EXISTS users (
     password BLOB
 )
 """)
-
 conn.commit()
 
-# ================= PASSWORD =================
+# ================= AUTH =================
 def hash_password(password):
     return bcrypt.hashpw(password.encode(), bcrypt.gensalt())
 
@@ -37,182 +46,180 @@ def check_password(password, hashed):
     return bcrypt.checkpw(password.encode(), hashed)
 
 def strong_password(password):
-    return (
-        len(password) >= 6
-        and any(i.isdigit() for i in password)
-        and any(i.isalpha() for i in password)
-    )
+    return len(password) >= 6 and any(i.isdigit() for i in password) and any(i.isalpha() for i in password)
 
-# ================= AUTH =================
 def signup(username, password):
     try:
-        c.execute(
-            "INSERT INTO users VALUES (?, ?)",
-            (username, hash_password(password))
-        )
+        c.execute("INSERT INTO users VALUES (?, ?)", (username, hash_password(password)))
         conn.commit()
         return True
     except:
         return False
 
 def login(username, password):
-    c.execute(
-        "SELECT password FROM users WHERE username=?",
-        (username,)
-    )
+    c.execute("SELECT password FROM users WHERE username=?", (username,))
     data = c.fetchone()
+    return data and check_password(password, data[0])
 
-    if data:
-        return check_password(password, data[0])
-
-    return False
-
-# ================= SESSION =================
-if "logged_in" not in st.session_state:
-    st.session_state.logged_in = False
-
-if "page" not in st.session_state:
-    st.session_state.page = "Home"
-
-# ================= CSS =================
+# ================= CSS (NEON GLASS UI) =================
 st.markdown("""
 <style>
 
-.stApp{
-    background:#08130d;
-    color:white;
+/* BACKGROUND */
+.stApp {
+    background: radial-gradient(circle at top, #0b1a12, #050a07);
+    color: white;
 }
 
-/* HIDE STREAMLIT UI */
+/* HIDE STREAMLIT */
 #MainMenu {visibility:hidden;}
 footer {visibility:hidden;}
 header {visibility:hidden;}
 
-/* REMOVE GAP BETWEEN NAV COLUMNS */
-div[data-testid="column"]{
-    padding:0px !important;
-    margin:0px !important;
+/* ================= GLASS NAVBAR ================= */
+.navbar {
+    position: sticky;
+    top: 0;
+    z-index: 999;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    padding: 12px 20px;
+
+    background: rgba(10, 25, 18, 0.6);
+    backdrop-filter: blur(12px);
+
+    border-bottom: 1px solid rgba(34, 197, 94, 0.3);
 }
 
-/* NAV BUTTONS - CONNECTED BAR */
-div.stButton > button{
-    width:100%;
-    height:65px;
-    background:#15803d;
-    color:white;
-    border:none;
-    border-radius:0px;
-    font-size:16px;
-    font-weight:700;
-    transition:0.25s;
+/* NAV LINKS */
+.nav-links {
+    display: flex;
+    gap: 10px;
+}
+
+/* NAV BUTTON STYLE */
+.nav-item {
+    padding: 10px 18px;
+    border-radius: 12px;
+    text-decoration: none;
+    color: #d1fae5;
+    font-weight: 600;
+
+    transition: 0.3s;
 }
 
 /* HOVER */
-div.stButton > button:hover{
-    background:#e5e7eb;
-    color:#15803d;
-    transform:scale(1.02);
+.nav-item:hover {
+    background: rgba(34, 197, 94, 0.15);
+    box-shadow: 0 0 10px #22c55e;
+}
+
+/* ACTIVE PAGE */
+.active {
+    background: #22c55e;
+    color: black !important;
+    box-shadow: 0 0 15px #22c55e;
+}
+
+/* MOBILE HAMBURGER */
+.menu {
+    display: none;
 }
 
 /* HERO */
-.hero{
+.hero {
     background:
-    linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.75)),
+    linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.8)),
     url("https://images.unsplash.com/photo-1466692476868-aef1dfb1e735?q=80&w=2070&auto=format&fit=crop");
 
-    background-size:cover;
-    background-position:center;
-
-    padding:100px 70px;
-    border-radius:25px;
-    margin-top:20px;
-    margin-bottom:30px;
+    background-size: cover;
+    padding: 100px 60px;
+    border-radius: 25px;
+    margin-top: 20px;
 }
 
-.hero-title{
-    font-size:70px;
-    font-weight:900;
+.hero-title {
+    font-size: 70px;
+    font-weight: 900;
+    color: #4ade80;
+    text-shadow: 0 0 20px #22c55e;
 }
 
-.hero-sub{
-    font-size:22px;
-    color:#d1fae5;
-    margin-top:20px;
-    max-width:700px;
+.hero-sub {
+    font-size: 22px;
+    color: #d1fae5;
+    max-width: 700px;
 }
 
 /* CARDS */
-.card{
-    background:#101827;
-    border:1px solid #1f5134;
-    border-radius:20px;
-    padding:30px;
-    margin-top:20px;
+.card {
+    background: rgba(16, 24, 39, 0.8);
+    border: 1px solid #1f5134;
+    border-radius: 20px;
+    padding: 25px;
+    transition: 0.3s;
 }
 
-.card-title{
-    color:#4ade80;
-    font-size:28px;
-    font-weight:700;
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 0 20px rgba(34,197,94,0.3);
 }
 
-/* INPUT */
-.stTextInput input{
-    background:#0b1d13 !important;
-    color:white !important;
-    border:1px solid #1f5134 !important;
+.card-title {
+    color: #4ade80;
+    font-size: 24px;
+    font-weight: 700;
 }
 
-/* FILE UPLOADER */
-section[data-testid="stFileUploader"]{
-    background:#101827;
-    border:1px solid #1f5134;
-    padding:20px;
-    border-radius:15px;
-}
+/* MOBILE */
+@media (max-width: 768px) {
+    .nav-links {
+        display: none;
+    }
 
-/* FOOTER */
-.footer{
-    text-align:center;
-    margin-top:60px;
-    padding:30px;
-    color:#a7f3d0;
+    .menu {
+        display: block;
+        color: white;
+        font-size: 24px;
+    }
 }
 
 </style>
 """, unsafe_allow_html=True)
 
-# ================= NAVBAR (FIXED) =================
-cols = st.columns(6, gap="small")
+# ================= NAVBAR (GLASS + ACTIVE STATE) =================
+nav_items = ["Home", "Plant", "Blog", "Privacy", "Contact", "Login"]
 
-nav_items = [
-    ("Home", "Home"),
-    ("Plant", "Plant"),
-    ("Blog", "Blog"),
-    ("Privacy Policy", "Privacy"),
-    ("Contact Us", "Contact"),
-    ("Login", "Login")
-]
+st.markdown('<div class="navbar">', unsafe_allow_html=True)
 
-for i, (label, page) in enumerate(nav_items):
-    with cols[i]:
-        if st.button(label, key=page):
-            st.session_state.page = page
+st.markdown("🌿 <b>LeafSentry AI</b>", unsafe_allow_html=True)
+
+links_html = '<div class="nav-links">'
+
+for item in nav_items:
+    active_class = "active" if page == item else ""
+    links_html += f'<a class="nav-item {active_class}" href="?page={item}">{item}</a>'
+
+links_html += "</div>"
+
+st.markdown(links_html, unsafe_allow_html=True)
+
+st.markdown("</div>", unsafe_allow_html=True)
+
+# ================= ROUTE SYNC =================
+st.session_state.page = page
 
 # ================= HOME =================
-if st.session_state.page == "Home":
+if page == "Home":
 
     st.markdown("""
 <div class="hero">
-
-<div class="hero-title">
-LeafSentry AI
-</div>
-
+<div class="hero-title">LeafSentry AI</div>
 <div class="hero-sub">
-Smart plant disease detection powered by deep learning and AI.
+Smart plant disease detection powered by AI & deep learning.
 </div>
-
 </div>
 """, unsafe_allow_html=True)
 
@@ -220,91 +227,74 @@ Smart plant disease detection powered by deep learning and AI.
 
     with c1:
         st.markdown("""
-<div class="card">
-<div class="card-title">🌿 Plant Monitoring</div>
-<p>Detect unhealthy plants instantly.</p>
-</div>
+<div class="card"><div class="card-title">🌿 Monitoring</div><p>Detect plant health instantly.</p></div>
 """, unsafe_allow_html=True)
 
     with c2:
         st.markdown("""
-<div class="card">
-<div class="card-title">⚡ Fast Detection</div>
-<p>Upload leaf images for instant AI prediction.</p>
-</div>
+<div class="card"><div class="card-title">⚡ Fast AI</div><p>Instant predictions from images.</p></div>
 """, unsafe_allow_html=True)
 
     with c3:
         st.markdown("""
-<div class="card">
-<div class="card-title">🧠 Deep Learning</div>
-<p>Neural network disease classification.</p>
-</div>
+<div class="card"><div class="card-title">🧠 Deep Learning</div><p>Neural network classification.</p></div>
 """, unsafe_allow_html=True)
 
 # ================= PLANT =================
-elif st.session_state.page == "Plant":
-    st.title("🌱 Plant Information")
+elif page == "Plant":
+    st.title("🌱 Plant Info")
 
 # ================= BLOG =================
-elif st.session_state.page == "Blog":
+elif page == "Blog":
     st.title("📰 Blog")
 
 # ================= PRIVACY =================
-elif st.session_state.page == "Privacy":
+elif page == "Privacy":
     st.title("🔒 Privacy Policy")
 
 # ================= CONTACT =================
-elif st.session_state.page == "Contact":
-    st.title("📞 Contact Us")
+elif page == "Contact":
+    st.title("📞 Contact")
 
 # ================= LOGIN =================
-elif st.session_state.page == "Login":
+elif page == "Login":
 
-    st.title("🔐 Login")
+    st.title("🔐 Login System")
 
     tab1, tab2 = st.tabs(["Login", "Sign Up"])
 
     with tab1:
-        username = st.text_input("Username")
-        password = st.text_input("Password", type="password")
+        u = st.text_input("Username")
+        p = st.text_input("Password", type="password")
 
-        if st.button("Login Account"):
-            if login(username, password):
+        if st.button("Login"):
+            if login(u, p):
                 st.session_state.logged_in = True
-                st.session_state.page = "ML"
-                st.success("Login Successful")
-                st.rerun()
+                st.success("Login success")
             else:
-                st.error("Invalid login")
+                st.error("Wrong credentials")
 
     with tab2:
-        new_user = st.text_input("New Username")
-        new_pass = st.text_input("New Password", type="password")
+        nu = st.text_input("New Username")
+        np = st.text_input("New Password", type="password")
 
-        if st.button("Create Account"):
-            if strong_password(new_pass):
-                if signup(new_user, new_pass):
-                    st.success("Account Created")
+        if st.button("Create"):
+            if strong_password(np):
+                if signup(nu, np):
+                    st.success("Account created")
                 else:
-                    st.error("Username exists")
+                    st.error("User exists")
             else:
                 st.warning("Weak password")
 
 # ================= ML =================
-elif st.session_state.page == "ML":
+elif page == "ML":
 
     if not st.session_state.logged_in:
-        st.warning("Please login first")
-        st.session_state.page = "Login"
-        st.rerun()
+        st.warning("Login required")
+        st.stop()
 
-    st.title("🧠 Plant Disease Detection")
-
-    if st.button("Logout"):
-        st.session_state.logged_in = False
-        st.session_state.page = "Home"
-        st.rerun()
+    st.title("🧠 Disease Detection AI")
 
     classes = ["Diseased", "Healthy"]
 
@@ -330,8 +320,7 @@ elif st.session_state.page == "ML":
             self.fc = nn.Linear(64, 2)
 
         def forward(self, x):
-            x = self.net(x)
-            return self.fc(x.view(x.size(0), -1))
+            return self.fc(self.net(x).view(x.size(0), -1))
 
     @st.cache_resource
     def load_model():
@@ -345,15 +334,11 @@ elif st.session_state.page == "ML":
 
     model = load_model()
 
-    uploaded = st.file_uploader("Upload Leaf Image", type=["jpg", "png", "jpeg"])
+    img = st.file_uploader("Upload Leaf Image", type=["png","jpg","jpeg"])
 
-    if uploaded:
-        image = Image.open(uploaded)
-
-        c1, c2 = st.columns(2)
-
-        with c1:
-            st.image(image, use_container_width=True)
+    if img:
+        image = Image.open(img)
+        st.image(image, use_container_width=True)
 
         x = transform(image).unsqueeze(0)
 
@@ -364,25 +349,15 @@ elif st.session_state.page == "ML":
             probs = np.array([0.5, 0.5])
 
         pred = np.argmax(probs)
-        conf = probs[pred] * 100
 
-        with c2:
-            st.markdown(f"""
-<div class="card">
-<div class="card-title">Prediction</div>
-<h1>{classes[pred]}</h1>
-<h3>{conf:.2f}%</h3>
-</div>
-""", unsafe_allow_html=True)
+        st.success(f"{classes[pred]} ({probs[pred]*100:.2f}%)")
 
-            st.progress(int(conf))
-
-        fig = px.bar(x=classes, y=probs * 100)
+        fig = px.bar(x=classes, y=probs*100)
         st.plotly_chart(fig, use_container_width=True)
 
 # ================= FOOTER =================
 st.markdown("""
-<div class="footer">
-© 2026 LeafSentry AI
+<div style="text-align:center; padding:30px; color:#86efac;">
+© 2026 LeafSentry AI • Built with Streamlit
 </div>
 """, unsafe_allow_html=True)
