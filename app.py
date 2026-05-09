@@ -83,39 +83,27 @@ if "page" not in st.session_state:
 st.markdown("""
 <style>
 
-/* ================= MAIN ================= */
-
+/* MAIN */
 .stApp{
     background:#08130d;
     color:white;
 }
 
-/* Hide Streamlit */
+/* Hide Streamlit Branding */
 #MainMenu {visibility:hidden;}
 footer {visibility:hidden;}
 header {visibility:hidden;}
 
-/* ================= NAVBAR ================= */
-
-.navbar{
-    background:#15803d;
-    padding:0px;
-    margin-bottom:25px;
-}
-
+/* NAVBAR */
 div.stButton > button{
     width:100%;
     height:70px;
-
     background:#15803d;
     color:white;
-
     border:none;
     border-radius:0px;
-
     font-size:20px;
     font-weight:700;
-
     transition:0.3s;
 }
 
@@ -124,11 +112,10 @@ div.stButton > button:hover{
     color:#15803d;
 }
 
-/* ================= HERO ================= */
-
+/* HERO */
 .hero{
     background:
-    linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.7)),
+    linear-gradient(rgba(0,0,0,0.65), rgba(0,0,0,0.75)),
     url("https://images.unsplash.com/photo-1466692476868-aef1dfb1e735?q=80&w=2070&auto=format&fit=crop");
 
     background-size:cover;
@@ -136,13 +123,12 @@ div.stButton > button:hover{
 
     padding:100px 70px;
     border-radius:25px;
-
     margin-top:20px;
     margin-bottom:30px;
 }
 
 .hero-title{
-    font-size:70px;
+    font-size:72px;
     font-weight:900;
     color:white;
 }
@@ -150,23 +136,17 @@ div.stButton > button:hover{
 .hero-sub{
     font-size:22px;
     color:#d1fae5;
-    margin-top:15px;
+    margin-top:20px;
     max-width:700px;
 }
 
-/* ================= CARDS ================= */
-
+/* CARDS */
 .card{
-    background:#102117;
-
+    background:#101827;
     border:1px solid #1f5134;
-
     border-radius:20px;
-
     padding:30px;
-
     margin-top:20px;
-
     transition:0.3s;
 }
 
@@ -177,44 +157,32 @@ div.stButton > button:hover{
 
 .card-title{
     color:#4ade80;
-
-    font-size:26px;
-
+    font-size:28px;
     font-weight:700;
-
     margin-bottom:15px;
 }
 
-/* ================= INPUTS ================= */
-
+/* INPUTS */
 .stTextInput input{
     background:#0b1d13 !important;
-
     color:white !important;
-
     border:1px solid #1f5134 !important;
-
     border-radius:10px !important;
 }
 
-/* ================= FILE UPLOADER ================= */
-
+/* FILE UPLOADER */
 section[data-testid="stFileUploader"]{
-    background:#102117;
+    background:#101827;
+    border:1px solid #1f5134;
     padding:20px;
     border-radius:15px;
-    border:1px solid #1f5134;
 }
 
-/* ================= FOOTER ================= */
-
+/* FOOTER */
 .footer{
     text-align:center;
-
-    margin-top:70px;
-
+    margin-top:60px;
     padding:30px;
-
     color:#a7f3d0;
 }
 
@@ -222,37 +190,33 @@ section[data-testid="stFileUploader"]{
 """, unsafe_allow_html=True)
 
 # ================= NAVBAR =================
-st.markdown('<div class="navbar">', unsafe_allow_html=True)
+col1, col2, col3, col4, col5, col6 = st.columns([1,1,1,1.5,1.3,1])
 
-nav1, nav2, nav3, nav4, nav5, nav6 = st.columns([1,1,1,1.5,1.2,1])
-
-with nav1:
+with col1:
     if st.button("Home"):
         st.session_state.page = "Home"
 
-with nav2:
+with col2:
     if st.button("Plant"):
         st.session_state.page = "Plant"
 
-with nav3:
+with col3:
     if st.button("Blog"):
         st.session_state.page = "Blog"
 
-with nav4:
+with col4:
     if st.button("Privacy Policy"):
         st.session_state.page = "Privacy"
 
-with nav5:
+with col5:
     if st.button("Contact Us"):
         st.session_state.page = "Contact"
 
-with nav6:
+with col6:
     if st.button("Login"):
         st.session_state.page = "Login"
 
-st.markdown('</div>', unsafe_allow_html=True)
-
-# ================= HOME PAGE =================
+# ================= HOME =================
 if st.session_state.page == "Home":
 
     st.markdown("""
@@ -270,10 +234,9 @@ if st.session_state.page == "Home":
     </div>
     """, unsafe_allow_html=True)
 
-    col1, col2, col3 = st.columns(3)
+    c1, c2, c3 = st.columns(3)
 
-    with col1:
-
+    with c1:
         st.markdown("""
         <div class="card">
 
@@ -288,8 +251,7 @@ if st.session_state.page == "Home":
         </div>
         """, unsafe_allow_html=True)
 
-    with col2:
-
+    with c2:
         st.markdown("""
         <div class="card">
 
@@ -304,8 +266,7 @@ if st.session_state.page == "Home":
         </div>
         """, unsafe_allow_html=True)
 
-    with col3:
-
+    with c3:
         st.markdown("""
         <div class="card">
 
@@ -335,9 +296,9 @@ elif st.session_state.page == "Plant":
         <ul>
             <li>Leaf Spot</li>
             <li>Powdery Mildew</li>
+            <li>Root Rot</li>
             <li>Rust Fungus</li>
             <li>Bacterial Wilt</li>
-            <li>Root Rot</li>
         </ul>
 
     </div>
@@ -358,14 +319,14 @@ elif st.session_state.page == "Blog":
             </div>
 
             <p>
-            Learn modern agriculture techniques and plant disease
-            prevention strategies.
+            Learn modern agriculture techniques and disease prevention
+            strategies for healthy farming.
             </p>
 
         </div>
         """, unsafe_allow_html=True)
 
-# ================= PRIVACY PAGE =================
+# ================= PRIVACY =================
 elif st.session_state.page == "Privacy":
 
     st.title("🔒 Privacy Policy")
@@ -373,13 +334,12 @@ elif st.session_state.page == "Privacy":
     st.markdown("""
     <div class="card">
 
-    Your uploaded images and account information remain private
-    and securely stored.
+    We do not share your uploaded images or personal account data.
 
     </div>
     """, unsafe_allow_html=True)
 
-# ================= CONTACT PAGE =================
+# ================= CONTACT =================
 elif st.session_state.page == "Contact":
 
     st.title("📞 Contact Us")
@@ -389,7 +349,7 @@ elif st.session_state.page == "Contact":
 
     📧 Email: leafsentry@gmail.com
 
-    🌍 Website: www.leafsentryai.com
+    🌐 Website: www.leafsentryai.com
 
     📱 Phone: +60 123-456-789
 
@@ -415,7 +375,7 @@ elif st.session_state.page == "Login":
 
     tab1, tab2 = st.tabs(["Login", "Sign Up"])
 
-    # ================= LOGIN =================
+    # LOGIN
     with tab1:
 
         username = st.text_input("Username")
@@ -439,7 +399,7 @@ elif st.session_state.page == "Login":
             else:
                 st.error("Invalid Username or Password")
 
-    # ================= SIGNUP =================
+    # SIGNUP
     with tab2:
 
         new_user = st.text_input("Create Username")
@@ -481,12 +441,11 @@ elif st.session_state.page == "ML":
     if st.button("Logout"):
 
         st.session_state.logged_in = False
-
         st.session_state.page = "Home"
 
         st.rerun()
 
-    # ================= MODEL =================
+    # MODEL
     classes = ["Diseased", "Healthy"]
 
     transform = transforms.Compose([
@@ -543,12 +502,11 @@ elif st.session_state.page == "ML":
             return model
 
         except:
-
             return None
 
     model = load_model()
 
-    # ================= UPLOAD =================
+    # UPLOAD
     uploaded = st.file_uploader(
         "Upload Leaf Image",
         type=["jpg", "jpeg", "png"]
@@ -561,7 +519,6 @@ elif st.session_state.page == "ML":
         col1, col2 = st.columns(2)
 
         with col1:
-
             st.image(
                 image,
                 use_container_width=True
