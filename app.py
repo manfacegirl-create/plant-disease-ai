@@ -23,7 +23,7 @@ if "page" not in st.session_state:
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
 
-# ================= DB =================
+# ================= DATABASE =================
 conn = sqlite3.connect("users.db", check_same_thread=False)
 c = conn.cursor()
 
@@ -58,33 +58,39 @@ def login(u, p):
 def strong_password(p):
     return len(p) >= 6 and any(i.isdigit() for i in p) and any(i.isalpha() for i in p)
 
-# ================= PRO CSS (SAFE STREAMLIT ONLY) =================
+# ================= 🌿 PLANT GREEN THEME CSS =================
 st.markdown("""
 <style>
 
-/* BACKGROUND */
+/* BACKGROUND (SOFT FARM GREEN) */
 .stApp {
-    background: radial-gradient(circle at top, #07140c, #020705);
-    color: white;
+    background: linear-gradient(
+        180deg,
+        #eaf7ee 0%,
+        #dff3e4 40%,
+        #cdebd6 100%
+    );
+    color: #12301d;
 }
 
-/* REMOVE STREAMLIT CLUTTER */
+/* HIDE STREAMLIT */
 #MainMenu {visibility:hidden;}
 footer {visibility:hidden;}
 header {visibility:hidden;}
 
-/* ================= NAVBAR (ONE LINE PRO UI) ================= */
+/* ================= NAVBAR ================= */
 .navbar {
     display: flex;
     justify-content: space-between;
     align-items: center;
 
-    padding: 12px 20px;
+    padding: 12px 18px;
 
-    background: rgba(10, 35, 18, 0.75);
-    backdrop-filter: blur(14px);
+    background: rgba(34, 85, 55, 0.92);
+    backdrop-filter: blur(12px);
 
-    border-bottom: 1px solid rgba(34, 197, 94, 0.4);
+    border-bottom: 2px solid #2f6f46;
+
     position: sticky;
     top: 0;
     z-index: 999;
@@ -92,88 +98,117 @@ header {visibility:hidden;}
 
 /* LOGO */
 .logo {
-    font-size: 20px;
+    font-size: 22px;
     font-weight: 900;
-    color: #22c55e;
-    text-shadow: 0 0 12px #22c55e;
+    color: #eafff0;
 }
 
-/* NAV ROW = SINGLE LINE */
-.navbar-container {
-    display: flex;
-    gap: 8px;
-}
-
-/* BUTTON FIX (NO HTML TAGS) */
+/* BUTTONS */
 .stButton > button {
-    background: transparent;
-    color: #d1fae5;
-    border: 1px solid rgba(34,197,94,0.35);
+    background: #2f6f46;
+    color: #eafff0;
 
+    border: 1px solid #4caf72;
     padding: 9px 14px;
-    border-radius: 10px;
 
+    border-radius: 12px;
     font-weight: 700;
+
     transition: 0.25s;
     width: 100%;
 }
 
 /* HOVER */
 .stButton > button:hover {
-    background: rgba(34,197,94,0.15);
-    box-shadow: 0 0 10px #22c55e;
+    background: #3f8f5c;
+    box-shadow: 0 0 12px rgba(76, 175, 114, 0.5);
     transform: translateY(-2px);
 }
 
-/* ACTIVE STATE */
+/* ACTIVE BUTTON */
 .active-btn > button {
-    background: #22c55e !important;
-    color: black !important;
-    box-shadow: 0 0 15px #22c55e;
+    background: #a6e3b7 !important;
+    color: #12301d !important;
+    font-weight: 900;
 }
 
-/* HERO TITLE (PRO LEVEL SCALING) */
+/* ================= HERO ================= */
+.hero {
+    padding: 100px 60px;
+    border-radius: 25px;
+    margin-top: 20px;
+
+    background:
+    linear-gradient(rgba(0, 50, 20, 0.55), rgba(0, 20, 10, 0.75)),
+    url("https://images.unsplash.com/photo-1523348837708-15d4a09cfac2?q=80&w=2070&auto=format&fit=crop");
+
+    background-size: cover;
+    background-position: center;
+}
+
+/* BIG TITLE */
 .hero-title {
-    font-size: clamp(50px, 6vw, 95px);
+    font-size: clamp(48px, 6vw, 92px);
     font-weight: 1000;
-    color: #4ade80;
-    text-shadow: 0 0 25px #22c55e;
-    line-height: 1.05;
+    color: #eafff0;
 }
 
 .hero-sub {
     font-size: 20px;
-    color: #d1fae5;
+    color: #d7f7df;
     max-width: 750px;
     margin-top: 10px;
 }
 
-/* CARD UI */
+/* ================= CARDS ================= */
 .card {
-    background: rgba(16, 24, 39, 0.85);
-    border: 1px solid rgba(34,197,94,0.25);
+    background: rgba(255, 255, 255, 0.78);
+    border: 1px solid #bde7c8;
     border-radius: 18px;
     padding: 22px;
     transition: 0.3s;
 }
 
 .card:hover {
-    transform: translateY(-6px);
-    box-shadow: 0 0 18px rgba(34,197,94,0.25);
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(46, 125, 70, 0.25);
 }
 
 .card-title {
-    color: #4ade80;
+    color: #2f6f46;
     font-size: 22px;
-    font-weight: 800;
+    font-weight: 900;
+}
+
+/* INPUT */
+.stTextInput input {
+    background: #f4fff7 !important;
+    border: 1px solid #bde7c8 !important;
+    border-radius: 10px !important;
+    color: #12301d !important;
+}
+
+/* FILE UPLOADER */
+section[data-testid="stFileUploader"] {
+    background: #f6fff8;
+    border: 1px solid #bde7c8;
+    padding: 20px;
+    border-radius: 15px;
+}
+
+/* FOOTER */
+.footer {
+    text-align: center;
+    padding: 30px;
+    color: #2f6f46;
+    font-weight: 600;
 }
 
 </style>
 """, unsafe_allow_html=True)
 
-# ================= NAVBAR (NO HTML OUTPUT BUG FIXED) =================
+# ================= NAVBAR =================
 st.markdown('<div class="navbar">', unsafe_allow_html=True)
-
 st.markdown('<div class="logo">🌿 LeafSentry AI</div>', unsafe_allow_html=True)
 
 cols = st.columns(6, gap="small")
@@ -193,10 +228,10 @@ st.markdown("</div>", unsafe_allow_html=True)
 if st.session_state.page == "Home":
 
     st.markdown("""
-<div style="padding:90px 40px;">
+<div class="hero">
     <div class="hero-title">LeafSentry AI</div>
     <div class="hero-sub">
-        Professional AI-powered plant disease detection system.
+        Smart AI system for plant disease detection and crop health monitoring.
     </div>
 </div>
 """, unsafe_allow_html=True)
@@ -204,17 +239,17 @@ if st.session_state.page == "Home":
     c1, c2, c3 = st.columns(3)
 
     with c1:
-        st.markdown("""<div class="card"><div class="card-title">🌿 Monitoring</div>Real-time plant health analysis.</div>""", unsafe_allow_html=True)
+        st.markdown("""<div class="card"><div class="card-title">🌿 Monitoring</div>Detect plant health instantly.</div>""", unsafe_allow_html=True)
 
     with c2:
-        st.markdown("""<div class="card"><div class="card-title">⚡ Speed</div>Instant AI predictions.</div>""", unsafe_allow_html=True)
+        st.markdown("""<div class="card"><div class="card-title">⚡ Speed</div>Fast AI predictions.</div>""", unsafe_allow_html=True)
 
     with c3:
-        st.markdown("""<div class="card"><div class="card-title">🧠 AI Model</div>Deep CNN classification system.</div>""", unsafe_allow_html=True)
+        st.markdown("""<div class="card"><div class="card-title">🧠 AI Model</div>Deep learning classification.</div>""", unsafe_allow_html=True)
 
 # ================= OTHER PAGES =================
 elif st.session_state.page == "Plant":
-    st.title("🌱 Plant Info")
+    st.title("🌱 Plant Information")
 
 elif st.session_state.page == "Blog":
     st.title("📰 Blog")
@@ -223,7 +258,7 @@ elif st.session_state.page == "Privacy":
     st.title("🔒 Privacy Policy")
 
 elif st.session_state.page == "Contact":
-    st.title("📞 Contact")
+    st.title("📞 Contact Us")
 
 # ================= LOGIN =================
 elif st.session_state.page == "Login":
@@ -241,18 +276,18 @@ elif st.session_state.page == "Login":
                 st.session_state.logged_in = True
                 st.success("Logged in")
             else:
-                st.error("Invalid login")
+                st.error("Invalid credentials")
 
     with tab2:
         nu = st.text_input("New Username")
         np = st.text_input("New Password", type="password")
 
-        if st.button("Create"):
+        if st.button("Create Account"):
             if strong_password(np):
                 if signup(nu, np):
                     st.success("Account created")
                 else:
-                    st.error("User exists")
+                    st.error("User already exists")
             else:
                 st.warning("Weak password")
 
