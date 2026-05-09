@@ -58,14 +58,14 @@ def login(u, p):
 def strong_password(p):
     return len(p) >= 6 and any(i.isdigit() for i in p) and any(i.isalpha() for i in p)
 
-# ================= 🌿 CLEAN GREEN THEME =================
+# ================= 🌿 CLEAN UI THEME =================
 st.markdown("""
 <style>
 
-/* BACKGROUND */
+/* ================= BACKGROUND ================= */
 .stApp {
     background: linear-gradient(180deg, #eaf7ee 0%, #dff3e4 50%, #cdebd6 100%);
-    color: #12301d;
+    color: #0b1f14;
 }
 
 /* HIDE STREAMLIT DEFAULT UI */
@@ -73,14 +73,15 @@ st.markdown("""
 footer {visibility:hidden;}
 header {visibility:hidden;}
 
-/* ================= NAVBAR FIX ================= */
+/* ================= NAVBAR (FIXED CONTRAST) ================= */
 .navbar {
     display: flex;
     justify-content: space-between;
     align-items: center;
 
     padding: 14px 22px;
-    background: rgba(34, 85, 55, 0.95);
+
+    background: #1f4d33;   /* solid no transparency */
 
     border-bottom: 2px solid #2f6f46;
 
@@ -93,76 +94,81 @@ header {visibility:hidden;}
 .logo {
     font-size: 24px;
     font-weight: 900;
-    color: #eafff0;
-    white-space: nowrap;
-}
+    color: #ffffff;
 
-/* BUTTON STYLE (FOR STREAMLIT BUTTONS INSIDE NAVBAR) */
-div[data-testid="column"] {
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    text-shadow: 0px 2px 6px rgba(0,0,0,0.35);
+    white-space: nowrap;
 }
 
 /* BUTTONS */
 .stButton > button {
-    background: #2f6f46;
-    color: #eafff0;
+    background: #ffffff;
+    color: #1f4d33;
 
-    border: 1px solid #4caf72;
+    border: 2px solid #4caf72;
     border-radius: 12px;
 
     padding: 8px 14px;
     font-weight: 700;
 
     width: 100%;
+
     transition: 0.25s;
 }
 
 /* HOVER */
 .stButton > button:hover {
-    background: #3f8f5c;
+    background: #d9f7e2;
+    color: #12301d;
+
     transform: translateY(-2px);
-    box-shadow: 0 0 10px rgba(76,175,114,0.3);
+    box-shadow: 0 0 12px rgba(76,175,114,0.35);
 }
 
-/* ACTIVE */
+/* ACTIVE BUTTON */
 .active-btn > button {
-    background: #a6e3b7 !important;
-    color: #12301d !important;
+    background: #4caf72 !important;
+    color: #ffffff !important;
+
     font-weight: 900;
+    border: 2px solid #ffffff;
 }
 
-/* HERO */
+/* ================= HERO ================= */
 .hero {
     margin-top: 25px;
     padding: 95px 55px;
     border-radius: 25px;
 
     background:
-    linear-gradient(rgba(0,50,20,0.55), rgba(0,20,10,0.75)),
+    linear-gradient(rgba(0,0,0,0.55), rgba(0,0,0,0.65)),
     url("https://images.unsplash.com/photo-1523348837708-15d4a09cfac2?q=80&w=2070&auto=format&fit=crop");
 
     background-size: cover;
     background-position: center;
 }
 
+/* HERO TEXT */
 .hero-title {
     font-size: clamp(50px, 6vw, 92px);
     font-weight: 1000;
-    color: #eafff0;
+    color: #ffffff;
+
+    text-shadow: 0px 4px 10px rgba(0,0,0,0.6);
 }
 
 .hero-sub {
     font-size: 20px;
-    color: #d7f7df;
+    color: #eafff0;
+
+    text-shadow: 0px 2px 6px rgba(0,0,0,0.5);
     max-width: 750px;
     margin-top: 12px;
 }
 
-/* CARDS */
+/* ================= CARDS ================= */
 .card {
-    background: rgba(255,255,255,0.85);
+    background: #ffffff;
     border: 1px solid #bde7c8;
     border-radius: 18px;
     padding: 22px;
@@ -175,24 +181,17 @@ div[data-testid="column"] {
 }
 
 .card-title {
-    color: #2f6f46;
+    color: #1f4d33;
     font-size: 22px;
     font-weight: 900;
 }
 
-/* INPUT */
+/* INPUT FIX */
 .stTextInput input {
-    background: #f4fff7 !important;
+    background: #ffffff !important;
     border: 1px solid #bde7c8 !important;
     border-radius: 10px !important;
-}
-
-/* FILE UPLOADER */
-section[data-testid="stFileUploader"] {
-    background: #f6fff8;
-    border: 1px solid #bde7c8;
-    padding: 20px;
-    border-radius: 15px;
+    color: #0b1f14 !important;
 }
 
 </style>
@@ -240,7 +239,7 @@ if st.session_state.page == "Home":
     with c3:
         st.markdown('<div class="card"><div class="card-title">🧠 AI Model</div>Deep learning classification.</div>', unsafe_allow_html=True)
 
-# ================= PAGES =================
+# ================= OTHER PAGES =================
 elif st.session_state.page == "Plant":
     st.title("🌱 Plant Information")
 
