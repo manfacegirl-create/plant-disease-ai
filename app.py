@@ -583,4 +583,4 @@ elif st.session_state.page == "Login":
                 st.warning(
                     "Password must contain letters and numbers and be at least 6 characters."
                 )
-```
+
