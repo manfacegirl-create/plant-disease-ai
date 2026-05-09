@@ -105,12 +105,12 @@ html, body, [class*="css"] {
     font-family: 'Segoe UI', sans-serif;
 }
 
-/* BACKGROUND */
+/* APP BACKGROUND */
 .stApp {
     background: #dfeee2;
 }
 
-/* REMOVE STREAMLIT UI */
+/* REMOVE STREAMLIT DEFAULT */
 #MainMenu {
     visibility: hidden;
 }
@@ -123,7 +123,7 @@ header {
     visibility: hidden;
 }
 
-/* REMOVE TOP PADDING */
+/* REMOVE TOP SPACE */
 .block-container {
     padding-top: 1rem;
     padding-bottom: 2rem;
@@ -132,17 +132,25 @@ header {
 /* ================= NAVBAR ================= */
 
 .navbar {
+
     background: #204d34;
+
     padding: 18px 25px;
-    border-radius: 18px;
+
+    border-radius: 20px;
+
     margin-bottom: 25px;
 }
 
 /* LOGO */
 .logo {
+
     color: white;
+
     font-size: 34px;
+
     font-weight: 900;
+
     margin-bottom: 15px;
 }
 
@@ -151,14 +159,14 @@ div[data-testid="stHorizontalBlock"] {
     gap: 0.8rem;
 }
 
-/* NAV BUTTONS */
+/* NAV BUTTON */
 .stButton > button {
 
     width: 100%;
 
     background: white;
 
-    color: #204d34;
+    color: black;
 
     border: 2px solid #3fa466;
 
@@ -171,7 +179,7 @@ div[data-testid="stHorizontalBlock"] {
     transition: 0.2s;
 }
 
-/* HOVER */
+/* BUTTON HOVER */
 .stButton > button:hover {
 
     background: #3fa466;
@@ -181,20 +189,19 @@ div[data-testid="stHorizontalBlock"] {
     transform: translateY(-2px);
 }
 
-/* ================= HERO ================= */
+/* ================= HERO SECTION ================= */
 
 .hero {
 
     padding: 90px 60px;
 
-    border-radius: 28px;
+    border-radius: 30px;
 
     background:
     linear-gradient(
         rgba(0,0,0,0.45),
         rgba(0,0,0,0.55)
     ),
-
     url("https://images.unsplash.com/photo-1523348837708-15d4a09cfac2?q=80&w=2070&auto=format&fit=crop");
 
     background-size: cover;
@@ -204,10 +211,10 @@ div[data-testid="stHorizontalBlock"] {
     margin-bottom: 30px;
 }
 
-/* TITLE */
+/* HERO TITLE */
 .hero-title {
 
-    font-size: 82px;
+    font-size: 80px;
 
     font-weight: 1000;
 
@@ -216,10 +223,10 @@ div[data-testid="stHorizontalBlock"] {
     margin-bottom: 15px;
 }
 
-/* SUBTITLE */
+/* HERO SUBTITLE */
 .hero-sub {
 
-    color: #ecfff1;
+    color: #f1fff4;
 
     font-size: 22px;
 
@@ -245,7 +252,6 @@ div[data-testid="stHorizontalBlock"] {
 
 /* CARD HOVER */
 .card:hover {
-
     transform: translateY(-5px);
 }
 
@@ -256,7 +262,7 @@ div[data-testid="stHorizontalBlock"] {
 
     font-weight: 900;
 
-    color: #204d34;
+    color: black;
 
     margin-bottom: 12px;
 }
@@ -264,15 +270,14 @@ div[data-testid="stHorizontalBlock"] {
 /* CARD TEXT */
 .card-text {
 
-    color: #2f4f38;
+    color: black;
 
     font-size: 17px;
 
     line-height: 1.7;
 }
 
-/* ================= INPUTS ================= */
-
+/* INPUT */
 .stTextInput input {
 
     border-radius: 12px;
@@ -280,6 +285,8 @@ div[data-testid="stHorizontalBlock"] {
     border: 1px solid #9fd3b2;
 
     background: white;
+
+    color: black;
 }
 
 /* FILE UPLOADER */
@@ -300,7 +307,13 @@ section[data-testid="stFileUploader"] {
 # ================= NAVBAR =================
 
 st.markdown(
-    '<div class="navbar"><div class="logo">🌿 LeafSentry AI</div></div>',
+    """
+    <div class="navbar">
+        <div class="logo">
+            🌿 LeafSentry AI
+        </div>
+    </div>
+    """,
     unsafe_allow_html=True
 )
 
@@ -323,11 +336,14 @@ for i, page in enumerate(pages):
 
             st.session_state.page = page
 
-# ================= HOME =================
+# ================= HOME PAGE =================
 
 if st.session_state.page == "Home":
 
-    st.markdown("""
+    # IMPORTANT:
+    # DO NOT USE EXTRA BACKTICKS INSIDE THIS BLOCK
+
+    hero_html = """
     <div class="hero">
 
         <div class="hero-title">
@@ -340,7 +356,12 @@ if st.session_state.page == "Home":
         </div>
 
     </div>
-    """, unsafe_allow_html=True)
+    """
+
+    st.markdown(
+        hero_html,
+        unsafe_allow_html=True
+    )
 
     c1, c2, c3 = st.columns(3)
 
@@ -370,7 +391,7 @@ if st.session_state.page == "Home":
             </div>
 
             <div class="card-text">
-                Fast and real-time predictions for crop health analysis.
+                Fast real-time crop health predictions.
             </div>
 
         </div>
@@ -386,7 +407,7 @@ if st.session_state.page == "Home":
             </div>
 
             <div class="card-text">
-                Deep learning model trained for accurate plant disease classification.
+                Deep learning classification model for disease detection.
             </div>
 
         </div>
@@ -398,13 +419,11 @@ elif st.session_state.page == "Plant":
 
     st.title("🌱 Plant Disease Detection")
 
-    # ================= LOGIN REQUIRED =================
-
     if not st.session_state.logged_in:
 
-        st.error("You must login first to use the AI model.")
-
-        st.info("Go to the Login page to continue.")
+        st.error(
+            "You must login first to use the AI model."
+        )
 
     else:
 
@@ -427,17 +446,14 @@ elif st.session_state.page == "Plant":
                 use_container_width=True
             )
 
-            # ================= DUMMY ML RESULT =================
-            # Replace with your real ML model later
-
             st.success(
                 "Prediction Complete"
             )
 
-            st.write("### 🌿 Prediction Result")
+            st.write("### Prediction Result")
             st.write("Healthy Plant")
 
-            st.write("### 📊 Confidence")
+            st.write("### Confidence")
             st.progress(95)
 
 # ================= BLOG =================
@@ -481,8 +497,7 @@ elif st.session_state.page == "Login":
         "Sign Up"
     ])
 
-    # ================= LOGIN TAB =================
-
+    # LOGIN
     with tab1:
 
         username = st.text_input(
@@ -512,8 +527,7 @@ elif st.session_state.page == "Login":
                     "Invalid username or password"
                 )
 
-    # ================= SIGNUP TAB =================
-
+    # SIGNUP
     with tab2:
 
         new_user = st.text_input(
