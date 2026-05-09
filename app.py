@@ -99,108 +99,69 @@ def strong_password(password):
 st.markdown("""
 <style>
 
-/* ================= GLOBAL ================= */
-
-html, body, [class*="css"] {
-    font-family: 'Segoe UI', sans-serif;
-}
-
 /* APP BACKGROUND */
 .stApp {
-    background: #dfeee2;
+    background-color: #dfeee2;
 }
 
-/* REMOVE STREAMLIT DEFAULT */
-#MainMenu {
-    visibility: hidden;
-}
-
-footer {
-    visibility: hidden;
-}
-
-header {
-    visibility: hidden;
-}
+/* REMOVE STREAMLIT UI */
+#MainMenu {visibility: hidden;}
+footer {visibility: hidden;}
+header {visibility: hidden;}
 
 /* REMOVE TOP SPACE */
 .block-container {
     padding-top: 1rem;
-    padding-bottom: 2rem;
 }
 
-/* ================= NAVBAR ================= */
-
+/* NAVBAR */
 .navbar {
-
-    background: #204d34;
-
-    padding: 18px 25px;
-
-    border-radius: 20px;
-
+    background-color: #204d34;
+    padding: 20px;
+    border-radius: 18px;
     margin-bottom: 25px;
 }
 
 /* LOGO */
 .logo {
-
     color: white;
-
-    font-size: 34px;
-
-    font-weight: 900;
-
-    margin-bottom: 15px;
+    font-size: 36px;
+    font-weight: bold;
 }
 
-/* BUTTON SPACING */
-div[data-testid="stHorizontalBlock"] {
-    gap: 0.8rem;
-}
-
-/* NAV BUTTON */
+/* BUTTONS */
 .stButton > button {
 
     width: 100%;
 
-    background: white;
+    background-color: white;
 
     color: black;
 
+    border-radius: 12px;
+
     border: 2px solid #3fa466;
 
-    border-radius: 14px;
+    padding: 10px;
 
-    padding: 10px 0;
-
-    font-weight: 700;
-
-    transition: 0.2s;
+    font-weight: bold;
 }
 
 /* BUTTON HOVER */
 .stButton > button:hover {
 
-    background: #3fa466;
+    background-color: #3fa466;
 
     color: white;
-
-    transform: translateY(-2px);
 }
 
-/* ================= HERO SECTION ================= */
+/* HERO */
+.hero-box {
 
-.hero {
-
-    padding: 90px 60px;
-
-    border-radius: 30px;
-
-    background:
+    background-image:
     linear-gradient(
-        rgba(0,0,0,0.45),
-        rgba(0,0,0,0.55)
+        rgba(0,0,0,0.5),
+        rgba(0,0,0,0.5)
     ),
     url("https://images.unsplash.com/photo-1523348837708-15d4a09cfac2?q=80&w=2070&auto=format&fit=crop");
 
@@ -208,63 +169,55 @@ div[data-testid="stHorizontalBlock"] {
 
     background-position: center;
 
+    padding: 100px 60px;
+
+    border-radius: 25px;
+
     margin-bottom: 30px;
 }
 
 /* HERO TITLE */
 .hero-title {
 
-    font-size: 80px;
+    color: white;
 
-    font-weight: 1000;
+    font-size: 75px;
+
+    font-weight: bold;
+}
+
+/* HERO TEXT */
+.hero-text {
 
     color: white;
 
-    margin-bottom: 15px;
+    font-size: 24px;
 }
 
-/* HERO SUBTITLE */
-.hero-sub {
-
-    color: #f1fff4;
-
-    font-size: 22px;
-
-    max-width: 700px;
-}
-
-/* ================= CARDS ================= */
-
+/* CARD */
 .card {
 
-    background: white;
+    background-color: white;
 
-    border-radius: 24px;
+    padding: 30px;
 
-    padding: 28px;
+    border-radius: 22px;
+
+    box-shadow: 0px 4px 12px rgba(0,0,0,0.1);
 
     min-height: 180px;
-
-    box-shadow: 0px 5px 15px rgba(0,0,0,0.08);
-
-    transition: 0.25s;
-}
-
-/* CARD HOVER */
-.card:hover {
-    transform: translateY(-5px);
 }
 
 /* CARD TITLE */
 .card-title {
 
-    font-size: 30px;
-
-    font-weight: 900;
-
     color: black;
 
-    margin-bottom: 12px;
+    font-size: 30px;
+
+    font-weight: bold;
+
+    margin-bottom: 10px;
 }
 
 /* CARD TEXT */
@@ -272,33 +225,7 @@ div[data-testid="stHorizontalBlock"] {
 
     color: black;
 
-    font-size: 17px;
-
-    line-height: 1.7;
-}
-
-/* INPUT */
-.stTextInput input {
-
-    border-radius: 12px;
-
-    border: 1px solid #9fd3b2;
-
-    background: white;
-
-    color: black;
-}
-
-/* FILE UPLOADER */
-section[data-testid="stFileUploader"] {
-
-    background: white;
-
-    padding: 20px;
-
-    border-radius: 18px;
-
-    border: 1px solid #cce8d5;
+    font-size: 18px;
 }
 
 </style>
@@ -306,16 +233,13 @@ section[data-testid="stFileUploader"] {
 
 # ================= NAVBAR =================
 
-st.markdown(
-    """
-    <div class="navbar">
-        <div class="logo">
-            🌿 LeafSentry AI
-        </div>
+st.markdown("""
+<div class="navbar">
+    <div class="logo">
+        🌿 LeafSentry AI
     </div>
-    """,
-    unsafe_allow_html=True
-)
+</div>
+""", unsafe_allow_html=True)
 
 pages = [
     "Home",
@@ -333,7 +257,6 @@ for i, page in enumerate(pages):
     with cols[i]:
 
         if st.button(page):
-
             st.session_state.page = page
 
 # ================= HOME PAGE =================
@@ -341,25 +264,23 @@ for i, page in enumerate(pages):
 if st.session_state.page == "Home":
 
     # IMPORTANT:
-    # DO NOT USE EXTRA BACKTICKS INSIDE THIS BLOCK
-
-    hero_html = """
-    <div class="hero">
-
-        <div class="hero-title">
-            LeafSentry AI
-        </div>
-
-        <div class="hero-sub">
-            Smart AI system for plant disease detection
-            and crop health monitoring.
-        </div>
-
-    </div>
-    """
+    # THIS FIXES THE HTML SHOWING ISSUE
 
     st.markdown(
-        hero_html,
+        """
+        <div class="hero-box">
+
+            <div class="hero-title">
+                LeafSentry AI
+            </div>
+
+            <div class="hero-text">
+                Smart AI system for plant disease detection
+                and crop health monitoring.
+            </div>
+
+        </div>
+        """,
         unsafe_allow_html=True
     )
 
@@ -367,51 +288,60 @@ if st.session_state.page == "Home":
 
     with c1:
 
-        st.markdown("""
-        <div class="card">
+        st.markdown(
+            """
+            <div class="card">
 
-            <div class="card-title">
-                🌿 Monitoring
+                <div class="card-title">
+                    🌿 Monitoring
+                </div>
+
+                <div class="card-text">
+                    Detect plant diseases instantly using AI monitoring.
+                </div>
+
             </div>
-
-            <div class="card-text">
-                Detect plant diseases instantly using AI-powered monitoring.
-            </div>
-
-        </div>
-        """, unsafe_allow_html=True)
+            """,
+            unsafe_allow_html=True
+        )
 
     with c2:
 
-        st.markdown("""
-        <div class="card">
+        st.markdown(
+            """
+            <div class="card">
 
-            <div class="card-title">
-                ⚡ Speed
+                <div class="card-title">
+                    ⚡ Speed
+                </div>
+
+                <div class="card-text">
+                    Fast real-time crop health predictions.
+                </div>
+
             </div>
-
-            <div class="card-text">
-                Fast real-time crop health predictions.
-            </div>
-
-        </div>
-        """, unsafe_allow_html=True)
+            """,
+            unsafe_allow_html=True
+        )
 
     with c3:
 
-        st.markdown("""
-        <div class="card">
+        st.markdown(
+            """
+            <div class="card">
 
-            <div class="card-title">
-                🧠 AI Model
+                <div class="card-title">
+                    🧠 AI Model
+                </div>
+
+                <div class="card-text">
+                    Deep learning model for disease classification.
+                </div>
+
             </div>
-
-            <div class="card-text">
-                Deep learning classification model for disease detection.
-            </div>
-
-        </div>
-        """, unsafe_allow_html=True)
+            """,
+            unsafe_allow_html=True
+        )
 
 # ================= PLANT PAGE =================
 
@@ -446,9 +376,7 @@ elif st.session_state.page == "Plant":
                 use_container_width=True
             )
 
-            st.success(
-                "Prediction Complete"
-            )
+            st.success("Prediction Complete")
 
             st.write("### Prediction Result")
             st.write("Healthy Plant")
@@ -463,7 +391,7 @@ elif st.session_state.page == "Blog":
     st.title("📰 Blog")
 
     st.write(
-        "Latest updates about smart farming and AI."
+        "Latest AI farming updates."
     )
 
 # ================= PRIVACY =================
@@ -473,7 +401,7 @@ elif st.session_state.page == "Privacy":
     st.title("🔒 Privacy Policy")
 
     st.write(
-        "Your uploaded data is protected securely."
+        "Your data is securely protected."
     )
 
 # ================= CONTACT =================
@@ -497,7 +425,7 @@ elif st.session_state.page == "Login":
         "Sign Up"
     ])
 
-    # LOGIN
+    # LOGIN TAB
     with tab1:
 
         username = st.text_input(
@@ -527,7 +455,7 @@ elif st.session_state.page == "Login":
                     "Invalid username or password"
                 )
 
-    # SIGNUP
+    # SIGNUP TAB
     with tab2:
 
         new_user = st.text_input(
@@ -558,5 +486,5 @@ elif st.session_state.page == "Login":
             else:
 
                 st.warning(
-                    "Password must contain letters, numbers, and be at least 6 characters."
+                    "Password must contain letters and numbers and be at least 6 characters."
                 )
