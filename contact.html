@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block title %}Contact{% endblock %}
+
+{% block content %}
+<div style="background:var(--green-50);border-bottom:1px solid var(--border);padding:64px 0">
+  <div class="container" style="max-width:800px">
+    <div class="section-label">Get in Touch</div>
+    <h1 class="section-title" style="margin-bottom:14px">Contact Us</h1>
+    <p style="font-size:1.05rem;color:var(--muted)">Have a question about a plant disease, want to collaborate, or found a bug? Our team is here to help.</p>
+  </div>
+</div>
+
+<div class="section">
+  <div class="container">
+    <div class="grid-2" style="gap:48px;align-items:start">
+      <div>
+        <h2 style="font-size:1.3rem;margin-bottom:24px">Contact Information</h2>
+        <div style="display:flex;flex-direction:column;gap:14px;margin-bottom:32px">
+          <div class="contact-info-item">
+            <div class="contact-icon">✉️</div>
+            <div><h4>Email</h4><p><a href="mailto:hello@leafsentry.io" style="color:var(--green-600)">hello@leafsentry.io</a></p></div>
+          </div>
+          <div class="contact-info-item">
+            <div class="contact-icon">📍</div>
+            <div><h4>Location</h4><p>Agricultural Innovation Centre<br>New Delhi, India 110 001</p></div>
+          </div>
+          <div class="contact-info-item">
+            <div class="contact-icon">🕐</div>
+            <div><h4>Response Time</h4><p>We typically reply within 1–2 business days.</p></div>
+          </div>
+        </div>
+        <div style="background:var(--green-50);border:1px solid var(--border);border-radius:10px;padding:24px">
+          <h3 style="font-size:1rem;margin-bottom:8px">🌿 Research Partnerships</h3>
+          <p style="font-size:.88rem;color:var(--muted);line-height:1.7">We actively collaborate with agricultural universities and research institutions. If you have annotated plant disease datasets or wish to co-author research, reach out via the form.</p>
+        </div>
+      </div>
+
+      <div>
+        {% if success %}
+        <div class="success-box">
+          <div class="success-icon">✉️</div>
+          <h3>Message received!</h3>
+          <p>Thank you for reaching out. We'll get back to you within 1–2 business days.</p>
+          <a href="{{ url_for('contact') }}" class="btn btn-outline">Send another message</a>
+        </div>
+        {% else %}
+        <div style="background:#fff;border:1px solid var(--border);border-radius:12px;padding:32px">
+          <h2 style="font-size:1.3rem;margin-bottom:24px">Send a Message</h2>
+          <form method="POST" action="{{ url_for('contact') }}">
+            <div class="form-row">
+              <div class="form-group">
+                <label>Full Name</label>
+                <input type="text" name="name" placeholder="Jane Smith" required />
+              </div>
+              <div class="form-group">
+                <label>Email Address</label>
+                <input type="email" name="email" placeholder="jane@example.com" required />
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Topic</label>
+              <select name="topic" required>
+                <option value="">Select a topic...</option>
+                <option>General Inquiry</option>
+                <option>Disease Identification Help</option>
+                <option>ML Model Feedback</option>
+                <option>Research Collaboration</option>
+                <option>Bug Report</option>
+                <option>Other</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Message</label>
+              <textarea name="message" placeholder="Describe your question..." required></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;padding:14px">✉️ Send Message</button>
+          </form>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

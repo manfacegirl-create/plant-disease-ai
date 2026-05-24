@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}Disease Library{% endblock %}
+
+{% block content %}
+<div class="section">
+  <div class="container">
+    <div class="section-label">Reference</div>
+    <h1 class="section-title" style="margin-bottom:8px">Disease Library</h1>
+    <p class="section-subtitle" style="margin-bottom:32px">A comprehensive reference of plant diseases. Filter by plant or severity to find what you need.</p>
+
+    <form method="GET" action="{{ url_for('diseases') }}" id="filterForm" class="filter-bar">
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input type="text" name="search" placeholder="Search diseases..." value="{{ search }}" />
+      </div>
+      <select name="plant">
+        <option value="">All Plants</option>
+        {% for name in ['Mango','Arjun','Guava','Neem'] %}
+        <option value="{{ name }}" {% if plant_filter == name %}selected{% endif %}>{{ name }}</option>
+        {% endfor %}
+      </select>
+      <select name="severity">
+        <option value="">All Severities</option>
+        {% for s in ['Critical','High','Medium','Low'] %}
+        <option value="{{ s }}" {% if severity_filter == s %}selected{% endif %}>{{ s }}</option>
+        {% endfor %}
+      </select>
+      <button type="submit" class="btn btn-primary btn-sm">Filter</button>
+    </form>
+
+    {% if diseases %}
+    <div style="display:flex;flex-direction:column;gap:12px">
+      {% for d in diseases %}
+      <a class="disease-row" href="{{ url_for('disease_detail', disease_id=d.id) }}" style="text-decoration:none">
+        <div class="disease-row-content">
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:4px">
+            <span class="disease-row-title">{{ d.name }}</span>
+            <span class="badge badge-{{ d.severity }}">
+              {% if d.severity == 'critical' %}🔴{% elif d.severity == 'high' %}🟠{% elif d.severity == 'medium' %}🟡{% else %}🟢{% endif %}
+              {{ d.severity|capitalize }}
+            </span>
+            <span class="badge badge-plant">{{ d.plant }}</span>
+          </div>
+          <p class="disease-row-desc">{{ d.desc }}</p>
+          <div class="disease-row-parts">
+            {% for pt in d.parts %}<span class="part-chip">{{ pt }}</span>{% endfor %}
+          </div>
+        </div>
+        <span class="disease-chevron">›</span>
+      </a>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+      <div class="empty-icon">🦠</div>
+      <h3>No diseases found</h3>
+      <p>Try adjusting your filters or <a href="{{ url_for('diseases') }}" style="color:var(--green-600)">clear all filters</a>.</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

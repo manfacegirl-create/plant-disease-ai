@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}{{ plant.name }}{% endblock %}
+
+{% block content %}
+<div class="detail-header">
+  <div class="container">
+    <a class="back-link" href="{{ url_for('plants') }}">← Back to Plants</a>
+    <div style="display:flex;align-items:flex-start;gap:32px;flex-wrap:wrap">
+      <div style="width:160px;height:160px;border-radius:16px;overflow:hidden;flex-shrink:0;border:1px solid var(--border)">
+        <img src="{{ plant.img }}" alt="{{ plant.name }}" style="width:100%;height:100%;object-fit:cover" />
+      </div>
+      <div style="flex:1">
+        <h1 style="font-size:2.5rem;margin-bottom:6px">{{ plant.name }}</h1>
+        <p style="font-style:italic;color:var(--muted);font-size:1.1rem;margin-bottom:14px">{{ plant.sci }}</p>
+        <span class="badge badge-plant">Region: {{ plant.region }}</span>
+      </div>
+      <a class="btn btn-primary" href="{{ url_for('health_check') }}?plant={{ plant.id }}">Run Health Check</a>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="container" style="display:grid;grid-template-columns:1fr 2fr;gap:48px">
+    <div>
+      <h3 style="font-size:1.05rem;font-weight:700;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--border)">🌿 Botanical Description</h3>
+      <p style="color:var(--muted);font-size:.92rem;line-height:1.7">{{ plant.desc }}</p>
+      <div style="margin-top:24px;background:var(--green-50);border:1px solid #c8e6d0;border-radius:10px;padding:20px">
+        <h4 style="font-weight:700;color:var(--green-700);margin-bottom:8px">Need an assessment?</h4>
+        <p style="font-size:.85rem;color:var(--muted);margin-bottom:14px">Upload a photo of your {{ plant.name }} leaves to instantly detect potential diseases.</p>
+        <a class="btn btn-outline btn-sm" href="{{ url_for('health_check') }}?plant={{ plant.id }}">Start Assessment</a>
+      </div>
+    </div>
+    <div>
+      <h2 style="font-size:1.4rem;margin-bottom:24px">
+        Known Diseases
+        <span style="background:var(--green-100);color:var(--green-800);border-radius:50%;width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;font-size:.85rem;font-family:Inter,sans-serif;font-weight:700;margin-left:8px">{{ diseases|length }}</span>
+      </h2>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        {% for d in diseases %}
+        <a class="disease-row" href="{{ url_for('disease_detail', disease_id=d.id) }}" style="text-decoration:none">
+          <div class="disease-row-content">
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:4px">
+              <span class="disease-row-title">{{ d.name }}</span>
+              <span class="badge badge-{{ d.severity }}">
+                {% if d.severity == 'critical' %}🔴{% elif d.severity == 'high' %}🟠{% elif d.severity == 'medium' %}🟡{% else %}🟢{% endif %}
+                {{ d.severity|capitalize }}
+              </span>
+            </div>
+            <p class="disease-row-desc">{{ d.desc }}</p>
+            <div class="disease-row-parts">
+              {% for pt in d.parts %}<span class="part-chip">{{ pt }}</span>{% endfor %}
+            </div>
+          </div>
+          <span class="disease-chevron">›</span>
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

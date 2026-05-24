@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}{{ disease.name }}{% endblock %}
+
+{% block content %}
+<div class="detail-header">
+  <div class="container">
+    <a class="back-link" href="{{ url_for('diseases') }}">← Back to Disease Library</a>
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:20px">
+      <div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px">
+          <span class="badge badge-{{ disease.severity }}">
+            {% if disease.severity == 'critical' %}🔴{% elif disease.severity == 'high' %}🟠{% elif disease.severity == 'medium' %}🟡{% else %}🟢{% endif %}
+            {{ disease.severity|capitalize }} Severity
+          </span>
+          {% if plant %}
+          <a href="{{ url_for('plant_detail', plant_id=plant.id) }}" class="badge badge-plant" style="text-decoration:none">{{ disease.plant }}</a>
+          {% endif %}
+        </div>
+        <h1 style="font-size:2.2rem;margin-bottom:10px">{{ disease.name }}</h1>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          {% for pt in disease.parts %}<span class="part-chip">{{ pt }}</span>{% endfor %}
+        </div>
+      </div>
+      <a class="btn btn-primary" href="{{ url_for('health_check') }}?plant={{ disease.plant_id }}">Check Your Plant</a>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="container">
+    <p style="font-size:1.05rem;color:var(--muted);margin-bottom:32px;max-width:800px;line-height:1.8">{{ disease.desc }}</p>
+    <hr>
+    <div class="grid-2" style="gap:40px;margin-top:32px">
+      <div>
+        <div class="info-section">
+          <h3>⚠️ Symptoms</h3>
+          <ul class="info-list">{% for s in disease.symptoms %}<li>{{ s }}</li>{% endfor %}</ul>
+        </div>
+        <div class="info-section">
+          <h3>🦠 Causes</h3>
+          <ul class="info-list">{% for c in disease.causes %}<li>{{ c }}</li>{% endfor %}</ul>
+        </div>
+      </div>
+      <div>
+        <div class="info-section">
+          <h3>💊 Treatments</h3>
+          <ul class="info-list">{% for t in disease.treatments %}<li>{{ t }}</li>{% endfor %}</ul>
+        </div>
+        <div class="info-section">
+          <h3>🛡️ Prevention Tips</h3>
+          <ul class="info-list">{% for p in disease.prevention %}<li>{{ p }}</li>{% endfor %}</ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

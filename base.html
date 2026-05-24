@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>{% block title %}LeafSentry{% endblock %} — Plant Disease Intelligence</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+</head>
+<body>
+
+<nav>
+  <div class="container nav-inner">
+    <a class="nav-logo" href="{{ url_for('home') }}">
+      <div class="nav-logo-icon">🌿</div>
+      LeafSentry
+    </a>
+    <button class="nav-mobile-toggle" onclick="document.getElementById('navLinks').classList.toggle('open')">☰</button>
+    <div class="nav-links" id="navLinks">
+      <a class="nav-link {% if page=='plants' %}active{% endif %}" href="{{ url_for('plants') }}">Plants</a>
+      <a class="nav-link {% if page=='diseases' %}active{% endif %}" href="{{ url_for('diseases') }}">Disease Library</a>
+      <a class="nav-link {% if page=='health-check' %}active{% endif %}" href="{{ url_for('health_check') }}">Health Check</a>
+      <a class="nav-link {% if page=='about' %}active{% endif %}" href="{{ url_for('about') }}">About</a>
+      <a class="nav-link {% if page=='contact' %}active{% endif %}" href="{{ url_for('contact') }}">Contact</a>
+    </div>
+    <a class="nav-cta btn" href="{{ url_for('health_check') }}">Run Assessment</a>
+  </div>
+</nav>
+
+{% block content %}{% endblock %}
+
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <div class="footer-brand-logo"><div class="icon">🌿</div>LeafSentry</div>
+        <p class="footer-desc">A professional platform for plant disease identification and health assessment. For agricultural research and educational purposes.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Resources</h4>
+        <ul>
+          <li><a href="{{ url_for('plants') }}">Plant Database</a></li>
+          <li><a href="{{ url_for('diseases') }}">Disease Library</a></li>
+          <li><a href="{{ url_for('health_check') }}">ML Health Check</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Company</h4>
+        <ul>
+          <li><a href="{{ url_for('about') }}">About Us</a></li>
+          <li><a href="{{ url_for('contact') }}">Contact Us</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Legal</h4>
+        <ul>
+          <li><a href="#">Privacy Policy</a></li>
+          <li><a href="#">Terms of Service</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2025 LeafSentry. All rights reserved.</span>
+      <span>For agricultural research and educational purposes.</span>
+    </div>
+  </div>
+</footer>
+
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

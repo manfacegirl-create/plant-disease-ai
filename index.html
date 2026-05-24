@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}Home{% endblock %}
+
+{% block content %}
+<div class="hero">
+  <div class="container hero-inner">
+    <div>
+      <div class="hero-pill"><span class="hero-pill-dot"></span> ML-Powered Plant Diagnostics</div>
+      <h1>Protect your crop with <em>scientific precision</em></h1>
+      <p>LeafSentry combines expert botanical research with machine learning to identify, understand, and treat plant diseases before they spread.</p>
+      <div class="hero-btns">
+        <a class="btn btn-primary btn-lg" href="{{ url_for('health_check') }}">🔬 Run Health Check</a>
+        <a class="btn btn-outline btn-lg" style="color: #ffffff !important; border-color: rgba(255,255,255,.4) !important;" href="{{ url_for('diseases') }}">Browse Library</a>
+      </div>
+      <div class="hero-trust">
+        <div class="hero-trust-item">🛡️ Trusted by Agronomists</div>
+        <div class="hero-trust-item">⚡ Real-time Analysis</div>
+      </div>
+    </div>
+    <div class="hero-img">
+      <img src="https://images.unsplash.com/photo-1566750948564-cd7f3a4f8c98?q=80&w=800&auto=format&fit=crop" alt="Plant research" />
+    </div>
+  </div>
+</div>
+
+<div class="stats-bar">
+  <div class="container stats-bar-inner">
+    <div class="stat-item"><div class="stat-num">4</div><div class="stat-label">🌿 Plant Species</div></div>
+    <div class="stat-item"><div class="stat-num">16</div><div class="stat-label">🦠 Diseases Tracked</div></div>
+    <div class="stat-item"><div class="stat-num">100%</div><div class="stat-label">⚡ Free to Use</div></div>
+    <div class="stat-item"><div class="stat-num">5</div><div class="stat-label">🔴 Critical Threats</div></div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="container">
+    <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:40px;flex-wrap:wrap;gap:16px">
+      <div>
+        <div class="section-label">Featured Species</div>
+        <h2 class="section-title">Supported Plant Species</h2>
+        <p class="section-subtitle">Our research covers key agricultural species with comprehensive disease profiles and treatment protocols.</p>
+      </div>
+      <a class="btn btn-ghost" href="{{ url_for('plants') }}">View all plants →</a>
+    </div>
+    <div class="grid-3">
+      {% for plant in plants %}
+      <a class="card plant-card" href="{{ url_for('plant_detail', plant_id=plant.id) }}">
+        <div class="plant-card-img">
+          <img src="{{ plant.img }}" alt="{{ plant.name }}" loading="lazy" />
+          <div class="plant-card-tag">{{ plant.diseases|length }} Diseases</div>
+        </div>
+        <div class="card-body">
+          <div class="plant-card-name">{{ plant.name }}</div>
+          <div class="plant-card-sci">{{ plant.sci }}</div>
+          <div class="plant-card-desc">{{ plant.desc }}</div>
+          <div class="plant-card-link">View profile <span>→</span></div>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<div class="cta-band">
+  <div class="container">
+    <div style="font-size:2.5rem;margin-bottom:16px">🌿</div>
+    <h2>Identify diseases instantly</h2>
+    <p>Upload a photo of a symptomatic leaf and our ML model will analyze it, providing immediate confidence scores and treatment recommendations.</p>
+    <a class="btn btn-secondary btn-lg" href="{{ url_for('health_check') }}">Start Assessment</a>
+  </div>
+</div>
+{% endblock %}

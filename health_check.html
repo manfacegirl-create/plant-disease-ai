@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Health Check{% endblock %}
+
+{% block content %}
+<div class="section" style="padding-bottom:0">
+  <div class="container">
+    <div style="max-width:700px;margin-bottom:32px">
+      <div style="display:inline-flex;align-items:center;gap:8px;background:var(--green-50);border:1px solid var(--green-300);color:var(--green-700);padding:5px 14px;border-radius:20px;font-size:.8rem;font-weight:600;margin-bottom:16px">
+        🔬 ML-Powered Analysis
+      </div>
+      <h1 class="section-title" style="margin-bottom:10px">Plant Health Check</h1>
+      <p style="color:var(--muted);font-size:1.05rem">Upload a photo of your plant's leaves below. Our CNN model will classify the leaf as <strong>Healthy</strong> or <strong>Diseased</strong> with a confidence score and treatment recommendations.</p>
+    </div>
+
+    <div class="streamlit-note">
+      <span style="font-size:1.2rem">💡</span>
+      <p>Select your plant species inside the scanner, then upload a leaf photo and click <strong>Run Diagnostic Scan</strong>. Results appear on the right side of the scanner.</p>
+    </div>
+  </div>
+</div>
+
+<div style="padding:0 0 72px">
+  <div class="container">
+    <div class="streamlit-wrapper">
+      <iframe
+        class="streamlit-iframe"
+        src="{{ streamlit_url }}"
+        title="LeafSentry ML Scanner"
+        allow="camera"
+        loading="lazy">
+      </iframe>
+    </div>
+    <p style="margin-top:12px;font-size:.82rem;color:var(--muted);text-align:center">
+      Scanner not loading? <a href="{{ streamlit_url }}" target="_blank" style="color:var(--green-600)">Open in new tab →</a>
+    </p>
+  </div>
+</div>
+{% endblock %}

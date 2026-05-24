@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Plants{% endblock %}
+
+{% block content %}
+<div class="section">
+  <div class="container">
+    <div class="section-label">Database</div>
+    <h1 class="section-title" style="margin-bottom:8px">Plant Database</h1>
+    <p class="section-subtitle" style="margin-bottom:40px">Explore our catalog of supported plant species with detailed botanical information, known diseases, symptoms, and treatments.</p>
+    <div class="grid-3">
+      {% for plant in plants %}
+      <a class="card plant-card" href="{{ url_for('plant_detail', plant_id=plant.id) }}">
+        <div class="plant-card-img">
+          <img src="{{ plant.img }}" alt="{{ plant.name }}" loading="lazy" />
+          <div class="plant-card-tag">{{ plant.diseases|length }} Diseases</div>
+        </div>
+        <div class="card-body">
+          <div class="plant-card-name">{{ plant.name }}</div>
+          <div class="plant-card-sci">{{ plant.sci }}</div>
+          <div class="plant-card-desc">{{ plant.desc }}</div>
+          <div class="plant-card-link">View profile <span>→</span></div>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}About{% endblock %}
+
+{% block content %}
+<div style="background:var(--green-50);border-bottom:1px solid var(--border);padding:80px 0">
+  <div class="container" style="max-width:840px">
+    <div class="section-label">About the Platform</div>
+    <h1 style="font-size:clamp(2rem,4vw,3rem);margin-bottom:20px;line-height:1.2">Bringing plant pathology expertise to every farmer's pocket</h1>
+    <p style="font-size:1.1rem;color:var(--muted);line-height:1.8">LeafSentry was built on a simple premise: disease kills crops, and early identification saves them. We combine decades of published plant science with modern machine learning to give growers a fast, reliable second opinion — at any scale, at any time.</p>
+  </div>
+</div>
+
+<div class="section">
+  <div class="container">
+    <h2 class="section-title" style="margin-bottom:40px">Our Principles</h2>
+    <div class="grid-3" style="gap:40px">
+      <div>
+        <div style="font-size:2rem;margin-bottom:14px">📖</div>
+        <h3 style="font-size:1.15rem;margin-bottom:10px">Science-First</h3>
+        <p style="color:var(--muted);font-size:.92rem;line-height:1.7">Every disease profile is researched from peer-reviewed agricultural literature and verified by plant pathologists. We do not speculate.</p>
+      </div>
+      <div>
+        <div style="font-size:2rem;margin-bottom:14px">🔬</div>
+        <h3 style="font-size:1.15rem;margin-bottom:10px">ML-Assisted Diagnostics</h3>
+        <p style="color:var(--muted);font-size:.92rem;line-height:1.7">Our CNN model is trained on labeled datasets from agricultural research institutions across South Asia and Africa.</p>
+      </div>
+      <div>
+        <div style="font-size:2rem;margin-bottom:14px">👨‍🌾</div>
+        <h3 style="font-size:1.15rem;margin-bottom:10px">Built for Farmers</h3>
+        <p style="color:var(--muted);font-size:.92rem;line-height:1.7">Designed for everyone — from subsistence farmers inspecting a single mango tree to agronomists managing hundreds of acres.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<hr style="margin:0">
+
+<div class="section">
+  <div class="container">
+    <div style="max-width:640px;margin-bottom:48px">
+      <h2 class="section-title" style="margin-bottom:12px">How the ML Model Works</h2>
+      <p style="color:var(--muted)">Our diagnostic pipeline processes plant images through specialized steps to produce a disease assessment with a calibrated confidence score.</p>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:16px;max-width:800px">
+      <div class="pipeline-step"><div class="pipeline-num">1</div><div><h4>Leaf Image Capture</h4><p>A photograph of the plant's leaves is submitted. Image quality directly impacts diagnostic accuracy.</p></div></div>
+      <div class="pipeline-step"><div class="pipeline-num">2</div><div><h4>Preprocessing & Feature Extraction</h4><p>The image undergoes color normalization and segmentation. A CNN extracts spatial features — lesion patterns, discoloration areas, and textural anomalies.</p></div></div>
+      <div class="pipeline-step"><div class="pipeline-num">3</div><div><h4>Classification & Confidence Scoring</h4><p>Extracted features pass through a binary classifier (Healthy vs Diseased) trained on annotated images. Each prediction carries a calibrated confidence score.</p></div></div>
+      <div class="pipeline-step"><div class="pipeline-num">4</div><div><h4>Knowledge-Backed Recommendations</h4><p>Matched detections are cross-referenced with our curated disease database, generating targeted treatment protocols for the identified disease and plant species.</p></div></div>
+    </div>
+  </div>
+</div>
+
+<div style="background:var(--green-50);border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:48px 0">
+  <div class="container">
+    <h2 style="font-size:1.3rem;margin-bottom:24px">CNN Architecture</h2>
+    <div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:28px;max-width:600px;font-size:.92rem;line-height:2">
+      <p><strong>Input:</strong> RGB image resized to 224×224 px</p>
+      <p><strong>Layer 1:</strong> Conv2d(3→32, 3×3) → ReLU → MaxPool2d(2)</p>
+      <p><strong>Layer 2:</strong> Conv2d(32→64, 3×3) → ReLU → MaxPool2d(2)</p>
+      <p><strong>Layer 3:</strong> Conv2d(64→128, 3×3) → ReLU → AdaptiveAvgPool2d(1)</p>
+      <p><strong>Classifier:</strong> Linear(128→2) → Softmax</p>
+      <p><strong>Output:</strong> [P(Diseased), P(Healthy)]</p>
+    </div>
+  </div>
+</div>
+
+<div class="cta-band">
+  <div class="container">
+    <div style="font-size:2rem;margin-bottom:14px">🔬</div>
+    <h2>Ready to assess your crop?</h2>
+    <p>Upload a leaf image and get a disease diagnosis in seconds — backed by our plant pathology research database.</p>
+    <a class="btn btn-secondary btn-lg" href="{{ url_for('health_check') }}">Start Health Check</a>
+  </div>
+</div>
+{% endblock %}
